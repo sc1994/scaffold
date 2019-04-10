@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 
 namespace scaffold.Controllers
 {
@@ -13,34 +14,15 @@ namespace scaffold.Controllers
     {
         // GET: api/Code
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<string> GetCode()
         {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET: api/Code/5
-        [HttpGet("{id}", Name = "Get")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST: api/Code
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
-
-        // PUT: api/Code/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE: api/ApiWithActions/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            return new string[]
+            {
+                Environment.CurrentDirectory,
+                Directory.GetCurrentDirectory(),
+                Path.GetDirectoryName(typeof(Program).Assembly.Location),
+                AppContext.BaseDirectory
+            };
         }
     }
 }

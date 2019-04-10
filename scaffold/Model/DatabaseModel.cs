@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Internal;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +8,7 @@ namespace scaffold.Model
 {
     public class DatabaseModel
     {
-        private readonly string _path = "D:/Self/scaffold/scaffold" + "/wwwroot/data/databaselist.json";
+        private readonly string _path = Environment.CurrentDirectory + "/wwwroot/data/databaselist.json";
 
         /// <summary>
         /// 命名

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,7 +8,7 @@ namespace scaffold.Model
 {
     public class ProjectInitModel
     {
-        private readonly string _path = "D:/Self/scaffold/scaffold" + "/wwwroot/data/projectlist.json"; // todo 考虑直接请求http地址
+        private readonly string _path = Environment.CurrentDirectory + "/wwwroot/data/projectlist.json"; // todo 考虑直接请求http地址
 
         public string Name { get; set; }
 
