@@ -1,0 +1,150 @@
+﻿@page
+@{
+    ViewData["Title"] = "地址维护";
+}
+
+<div id="app">
+    <el-dialog title="链接参数" :visible.sync="dialogFormVisible" width="40%">
+        <el-form :model="form">
+            <el-form-item label=" 命 名 ： " label-width="150">
+                <el-input v-model="form.name" style="width: 80%;" :disabled="disName"></el-input>
+            </el-form-item>
+            <el-form-item label="数据库：" label-width="150">
+                <el-input v-model="form.database" style="width: 80%;"></el-input>
+            </el-form-item>
+            <el-form-item label=" 地  址 ： " label-width="150">
+                <el-input v-model="form.host" style="width: 80%;"></el-input>
+            </el-form-item>
+            <el-form-item label=" 端  口 ： " label-width="150">
+                <el-input v-model="form.port" style="width: 80%;"></el-input>
+            </el-form-item>
+            <el-form-item label="用户名 ：" label-width="150">
+                <el-input v-model="form.user" style="width: 80%;"></el-input>
+            </el-form-item>
+            <el-form-item label=" 密  码 ： " label-width="150">
+                <el-input v-model="form.password" style="width: 80%;"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer">
+            <el-button v-on:click="dialogFormVisible = false">取 消</el-button>
+            <el-button type="primary" v-on:click="post">确 定</el-button>
+        </div>
+    </el-dialog>
+    <el-table :data="tableData"
+              border
+              style="width: 100%"
+              :max-height="tableHeight">
+        <el-table-column prop="name"
+                         label="命名">
+        </el-table-column>
+        <el-table-column prop="database"
+                         label="数据库">
+        </el-table-column>
+        <el-table-column prop="host"
+                         label="地址"
+                         width="180">
+        </el-table-column>
+        <el-table-column prop="port"
+                         label="端口"
+                         width="100">
+        </el-table-column>
+        <el-table-column prop="user"
+                         label="用户名">
+        </el-table-column>
+        <el-table-column prop="password"
+                         label="密码">
+        </el-table-column>
+        <el-table-column fixed="right"
+                         label="操作"
+                         width="100">
+            <template slot-scope="scope">
+                <el-button type="text" size="small" v-on:click="edit(scope.row)">编 辑</el-button>
+                <el-button type="text" size="small" v-on:click="delete1(scope.row.name)">删 除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <br />
+    <div style="text-align: right">
+        <el-button type="success" plain v-on:click="dialogFormVisible = true">添加地址</el-button>
+    </div>
+</div>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data: {
+            tableHeight: window.innerHeight - 75 - 32,
+            tableData: [],
+            form: {
+                name: "",
+                database: "",
+                host: "",
+                port: "3306",
+                user: "",
+                password: ""
+            },
+            dialogFormVisible: false,
+            disName: false
+        },
+        methods: {
+            post() {
+                var that = this;
+                axios.post("/database", this.form)
+                    .then(res => {
+                        console.log(res);
+                        if (res.data.item1) {
+                            that.init();
+                            that.message("保存成功");
+                            that.dialogFormVisible = false;
+                        } else {
+                            alert(res.data.item2);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    });
+            },
+            edit(model) {
+                this.form = JSON.parse(JSON.stringify(model));
+                this.disName = true;
+                this.dialogFormVisible = true;
+            },
+            delete1(name) {
+                var that = this;
+                axios.get(`/database/${name}`).then(res => {
+                    if (res.data) {
+                        alert("删除成功");
+                        that.init();
+                    } else {
+                        alert("删除失败");
+                    }
+                });
+            },
+            init() {
+                var that = this;
+                axios.get("/database").then(res => {
+                    that.tableData = res.data;
+                });
+            }
+        },
+        watch: {
+            dialogFormVisible(val) {
+                if (!val) {
+                    this.form = {
+                        name: "",
+                        database: "",
+                        host: "",
+                        port: "3306",
+                        user: "",
+                        password: ""
+                    };
+                    this.disName = false;
+                }
+            }
+        },
+        mounted() {
+            this.init();
+        }
+    });
+</script>
+

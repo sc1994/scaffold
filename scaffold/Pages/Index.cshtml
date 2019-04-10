@@ -1,0 +1,168 @@
+﻿@page
+@{
+    ViewData["Title"] = "数据结构";
+}
+
+<div id="app" :style="'height:' + height + 'px;'">
+    <el-container>
+        <el-aside width="500px">
+            <el-tree :data="data" :style="'height:' + height + 'px'"
+                     :props="defaultProps"
+                     accordion
+                     v-on:node-expand="handleNodeExpand"
+                     v-on:node-click="handleNodeClick">
+            </el-tree>
+        </el-aside>
+        <el-main style="padding: 0; padding-left: 5px;">
+            <el-tabs v-model="editableTabsValue" type="card" closable v-on:tab-remove="removeTab">
+                <el-tab-pane v-for="(item, index) in editableTabs"
+                             :key="item.name"
+                             :label="item.title"
+                             :name="item.name">
+                    <el-table :data="item.content"
+                              border
+                              style="width: 100%"
+                              :max-height="tableHeight">
+                        <el-table-column prop="columnKey"
+                                         label="主键"
+                                         width="80">
+                            <template slot-scope="scope">
+                                {{ scope.row.columnKey.length > 0 ? '√' : '' }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="increment"
+                                         label="自增"
+                                         width="80">
+                            <template slot-scope="scope">
+                                {{ scope.row.increment.length > 0 ? '√' : '' }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="name"
+                                         label="字段名"
+                                         width="280">
+                        </el-table-column>
+                        <el-table-column prop="fullType"
+                                         label="数据类型"
+                                         width="180">
+                        </el-table-column>
+                        <el-table-column prop="default"
+                                         label="默认值"
+                                         width="220">
+                        </el-table-column>
+                        <el-table-column prop="isNull"
+                                         label="不可为空"
+                                         width="80">
+                            <template slot-scope="scope">
+                                {{ scope.row.isNull == 'NO' ? '√' : '' }}
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="comment"
+                                         label="描述">
+                        </el-table-column>
+                    </el-table>
+                </el-tab-pane>
+            </el-tabs>
+        </el-main>
+    </el-container>
+</div>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data: {
+            data: [],
+            defaultProps: {
+                children: 'children',
+                label: 'label'
+            },
+            height: window.innerHeight - 75 - 32,
+            tableHeight: window.innerHeight - 141,
+            editableTabsValue: '2',
+            editableTabs: [],
+            tabIndex: 2
+        },
+        methods: {
+            handleNodeExpand(data) {
+                axios.get(`/table/${data.label}`)
+                    .then(res => {
+                        data.children = [];
+                        for (let a of res.data) {
+                            if (a.comment.length > 0) {
+                                data.children.push({
+                                    p: data.label,
+                                    label: `${a.name}【${a.comment}】`
+                                });
+                            } else {
+                                data.children.push({
+                                    p: data.label,
+                                    label: a.name
+                                });
+                            }
+                        }
+                    });
+            },
+            handleNodeClick(data) {
+                if (data.children) return;
+                console.log(data);
+                var that = this;
+                axios.get(`/field/${data.p}/${data.label.split('【')[0]}`)
+                    .then(res => {
+                        that.addTab(data.label.split('【')[0], res.data);
+                    });
+            },
+            addTab(title, table) {
+                var first = new JSLINQ(this.editableTabs).first(x => {
+                    return x.title == title;
+                });
+                if (first) {
+                    first.content = table;
+                    this.editableTabsValue = first.name;
+                } else {
+                    var newTabName = ++this.tabIndex + '';
+                    this.editableTabs.push({
+                        title: title,
+                        name: newTabName,
+                        content: table
+                    });
+                    this.editableTabsValue = newTabName;
+                }
+
+            },
+            removeTab(targetName) {
+                let tabs = this.editableTabs;
+                let activeName = this.editableTabsValue;
+                if (activeName === targetName) {
+                    tabs.forEach((tab, index) => {
+                        if (tab.name === targetName) {
+                            let nextTab = tabs[index + 1] || tabs[index - 1];
+                            if (nextTab) {
+                                activeName = nextTab.name;
+                            }
+                        }
+                    });
+                }
+
+                this.editableTabsValue = activeName;
+                this.editableTabs = tabs.filter(tab => tab.name !== targetName);
+            }
+        },
+        watch: {
+
+        },
+        mounted() {
+            var that = this;
+            axios.get("/database").then(res => {
+                for (let a of res.data) {
+                    that.data.push({
+                        label: a.name,
+                        children: [
+                            {
+                                label: "加载中..."
+                            }]
+                    });
+                }
+            });
+            this.height = window.innerHeight - 75 - 32;
+        }
+    })
+</script>

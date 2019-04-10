@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - scaffold</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://vuejs.org/js/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.bootcss.com/axios/0.18.0/axios.min.js"></script>
+    <script src="/js/JSLINQ.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+    <div id="layout-header">
+        <el-menu :default-active="activeIndex"
+                 mode="horizontal"
+                 v-on:select="handleSelect"
+                 background-color="#545c64"
+                 text-color="#fff"
+                 active-text-color="#ffd04b">
+            <el-menu-item :index="item.key" v-for="item in navigation" :key="item.key">
+                <template slot="title">
+                    {{item.title}}
+                </template>
+            </el-menu-item>
+        </el-menu>
+    </div>
+    <div style="height: 16px;"></div>
+    <div>
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+    <script>
+        new Vue({
+            el: "#layout-header",
+            data: {
+                activeIndex: "1",
+                navigation: [
+                    {
+                        title: "数据结构",
+                        key: "1",
+                        url: "/"
+                    }, {
+                        title: "地址维护",
+                        key: "2",
+                        url: "/list"
+                    }, {
+                        title: "代码生成",
+                        key: "3",
+                        url: "/code"
+                    }]
+            },
+            methods: {
+                handleSelect(key) {
+                    var item = new JSLINQ(this.navigation).first(x => {
+                        return x.key === key;
+                    });
+                    location.href = item.url;
+                }
+            },
+            mounted() {
+                var item = new JSLINQ(this.navigation).first(x => {
+                    return location.href.endsWith(x.url);
+                });
+                this.activeIndex = item.key;
+            }
+        })
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,256 @@
+﻿@page
+@{
+    ViewData["Title"] = "代码生成";
+}
+
+<div id="app">
+    <el-container>
+        <el-aside width="55%">
+            <el-card>
+                <div slot="header">
+                    <span>数据模型生成</span>
+                    <el-button style="float: right; padding: 3px 0" type="text" v-on:click="dialogFormVisible1=true">生成代码</el-button>
+                </div>
+                <div>
+                    <el-input placeholder="查询表名称大于两个字符进行匹配，多关键字以空格分隔"
+                              prefix-icon="el-icon-search"
+                              v-model="searchKey">
+                    </el-input>
+                </div>
+                <br />
+                <div v-if="searchVal.length > 0">
+                    <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" v-on:change="handleCheckAllChange">全选</el-checkbox>
+                    <div style="margin: 15px 0;"></div>
+                    <el-checkbox-group v-model="checkedTables" v-on:change="handleCheckedCitiesChange">
+                        <div v-for="table in searchVal" name="checkbox">
+                            <el-checkbox :label="table.databaseName+'.'+table.name" :key="table.databaseName+'.'+table.name">
+                                {{showTable(table)}}
+                            </el-checkbox>
+                        </div>
+                    </el-checkbox-group>
+                </div>
+            </el-card>
+        </el-aside>
+        <el-main style="padding: 0; padding-left: 1%;">
+
+            <el-card>
+                <div slot="header">
+                    <span>已有项目</span>
+                    <el-button style="float: right; padding: 3px 0" type="text" v-on:click="dialogFormVisible=true">添加</el-button>
+                </div>
+                <div>
+                    <el-table :data="tableData"
+                              stripe
+                              style="width: 100%">
+                        <el-table-column prop="name"
+                                         label="项目名"
+                                         width="180">
+                        </el-table-column>
+                        <el-table-column prop="path"
+                                         label="地址">
+                        </el-table-column>
+                        <el-table-column fixed="right"
+                                         label="操作"
+                                         width="100">
+                            <template slot-scope="scope">
+                                <el-button type="text" size="small" v-on:click="openEditProject(scope.row)">编辑</el-button>
+                                <el-button type="text" size="small" v-on:click="deleteProject(scope.row.name)">删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+            </el-card>
+            <br />
+            <el-card>
+                <div slot="header">
+                    <span>简单N层</span>
+                    <el-button style="float: right; padding: 3px 0" type="text">初始化项目</el-button>
+                </div>
+                <div>
+                    <el-form ref="form" :model="form" label-width="120px">
+                        <el-form-item label="项目名称：">
+                            <el-input v-model="form.name"></el-input>
+                        </el-form-item>
+                        <el-form-item label="项目地址：">
+                            <el-input v-model="form.path"></el-input>
+                        </el-form-item>
+                    </el-form>
+                </div>
+            </el-card>
+        </el-main>
+    </el-container>
+    <el-dialog title="项目维护" :visible.sync="dialogFormVisible" width="40%">
+        <el-form ref="form1" :model="form1" label-width="120px">
+            <el-form-item label="项目名称：">
+                <el-input v-model="form1.name" :disabled="disForm1Name"></el-input>
+            </el-form-item>
+            <el-form-item label="项目地址：">
+                <el-input v-model="form1.path"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer">
+            <el-button v-on:click="dialogFormVisible = false">取 消</el-button>
+            <el-button type="primary" v-on:click="saveProjectInit()">确 定</el-button>
+        </div>
+    </el-dialog>
+    <el-dialog title="代码生成" :visible.sync="dialogFormVisible1" width="50%">
+        <el-form ref="form2" :model="form2" label-width="120px">
+            <el-form-item label="项目：">
+                <el-select v-model="form2.region" placeholder="请选择活动区域">
+                    <el-option :label="item.name" :value="item.name" v-for="item in tableData"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="内容：">
+                <el-checkbox-group v-model="form2.type">
+                    <el-checkbox label="Model" name="type">Model</el-checkbox>
+                    <el-checkbox label="Entity" name="type">Entity</el-checkbox>
+                    <el-checkbox label="Database" name="type">Database</el-checkbox>
+                    <el-checkbox label="Service" name="type">Service</el-checkbox>
+                    <el-checkbox label="View" name="type">View</el-checkbox>
+                </el-checkbox-group>
+            </el-form-item>
+        </el-form>
+        <div slot="footer">
+            <el-button v-on:click="dialogFormVisible1 = false">取 消</el-button>
+            <el-button type="primary" v-on:click="">开 始 生 成</el-button>
+        </div>
+    </el-dialog>
+</div>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data: {
+            form: {},
+            form1: {},
+            form2: {
+                type: []
+            },
+            searchKey: "",
+            searchVal: [],
+            checkAll: false,
+            checkedTables: [],
+            isIndeterminate: false,
+            searchIcon: "el-icon-search",
+            tableData: [],
+            dialogFormVisible: false,
+            dialogFormVisible1: false,
+            disForm1Name: false
+        },
+        methods: {
+            search() {
+                var that = this;
+                var matchs = this.searchKey.split(" ");
+                axios.post("/table", this.searchKey.split(" ")).then(res => {
+                    that.searchVal = res.data;
+                    that.searchIcon = "el-icon-search";
+                    if (res.data.length < 1) {
+                        this.$message('没有数据');
+                    } else {
+                        setTimeout(() => {
+                            for (var match of matchs) {
+                                if (match.trim().length > 0) {
+                                    match = match.toLowerCase();
+                                    var allhtml = $("[name='checkbox']");
+                                    for (var item of allhtml) {
+                                        var flag = $(item).find('[class="el-checkbox__label"]');
+                                        var html = flag.html();
+                                        var arr = html.toLowerCase().split(match.toLowerCase());
+                                        var a = html.substring(0, arr[0].length);
+                                        var b = html.substring(arr[0].length, arr[0].length + match.length);
+                                        var c = html.substring(arr[0].length + match.length, html.length);
+                                        flag.html(`${a}<span style="color:#FF3333">${b}</span>${c}`);
+                                    }
+                                }
+                            }
+                        }, 400);
+                    }
+                });
+            },
+            showTable(table) {
+                if (table.comment.trim().length > 0) {
+                    return table.databaseName + '.' + table.name + '【' + table.comment + '】';
+                } else {
+                    return table.databaseName + '.' + table.name;
+                }
+            },
+            handleCheckAllChange(val) {
+                var v = new JSLINQ(this.searchVal).select(x => x.databaseName + '.' + x.name).toList();
+                this.checkedTables = val ? JSON.parse(JSON.stringify(v)) : [];
+                this.isIndeterminate = false;
+            },
+            handleCheckedCitiesChange(value) {
+                let checkedCount = value.length;
+                this.checkAll = checkedCount === this.searchVal.length;
+                this.isIndeterminate = checkedCount > 0 && checkedCount < this.searchVal.length;
+            },
+            saveProjectInit() {
+                var that = this;
+                axios.post("/project", this.form1).then(res => {
+                    if (res.data.item1) {
+                        that.initProjectInit();
+                        that.dialogFormVisible = false;
+                    } else {
+                        alert(res.data.item2);
+                    }
+                });
+            },
+            initProjectInit() {
+                var that = this;
+                axios.get("/project").then(res => {
+                    that.tableData = res.data;
+                });
+            },
+            openEditProject(model) {
+                this.disForm1Name = true;
+                this.form1 = JSON.parse(JSON.stringify(model));
+                this.dialogFormVisible = true;
+            },
+            deleteProject(name) {
+                var that = this;
+                axios.delete("/project/" + name).then(res => {
+                    if (res.data) {
+                        that.initProjectInit();
+                    } else {
+                        alert("删除失败");
+                    }
+                });
+            }
+        },
+        watch: {
+            searchKey(val) {
+                if (val.trim().length < 1) {
+                    this.searchVal = [];
+                }
+                var that = this;
+                setTimeout(() => {
+                    if (val === that.searchKey && val.trim().length > 2) {
+                        that.searchIcon = "el-icon-loading";
+                        that.search();
+                    }
+                }, 300);
+            },
+            dialogFormVisible(val) {
+                if (!val) {
+                    this.form1 = {};
+                    this.disForm1Name = false;
+                }
+            },
+            dialogFormVisible1(val) {
+                if (val) {
+                    if (this.checkedTables.length < 1) {
+                        this.$message('先选择表');
+                        this.dialogFormVisible1 = false;
+                    }
+                } else {
+                    this.form2 = {
+                        type: []
+                    };
+                }
+            }
+        },
+        mounted() {
+            this.initProjectInit();
+        }
+    });
+</script>
