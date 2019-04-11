@@ -17,11 +17,6 @@ namespace scaffold.Model
         public IEnumerable<string> CheckedTables { get; set; }
 
         /// <summary>
-        /// 代码类型
-        /// </summary>
-        public IEnumerable<string> Types { get; set; }
-
-        /// <summary>
         /// 项目名称
         /// </summary>
         public string ProjectName { get; set; }
@@ -38,6 +33,8 @@ namespace scaffold.Model
             foreach (var checkedTable in CheckedTables)
             {
                 var (database, table, fields) = InitInfo(checkedTable);
+                if (!fields.Any()) continue;
+                if (fields.All(x => x.ColumnKey.Trim().Length < 1)) continue;
 
                 var code = new StringBuilder();
                 code.AppendLine("//=============系统自动生成=============");
@@ -75,6 +72,9 @@ namespace scaffold.Model
             foreach (var checkedTable in CheckedTables)
             {
                 var (database, table, fields) = InitInfo(checkedTable);
+                if (!fields.Any()) continue;
+                if (fields.All(x => x.ColumnKey.Trim().Length < 1)) continue;
+
                 var path = $"{Project.Path}/{ProjectName}.Database/{database.Database}";
                 Directory.CreateDirectory(path);
                 var contextPath = $"{path}/1_{database.Database}Context.cs";
@@ -199,13 +199,15 @@ namespace scaffold.Model
                 code.AppendLine("        {");
                 code.AppendLine($"            modelBuilder.Entity<{table.Name}Model>(entity =>");
                 code.AppendLine("            {");
+                var isKey = true;
                 foreach (var field in fields)
                 {
-                    if (field.ColumnKey.Trim().Length > 0)
+                    if (field.ColumnKey.Trim().Length > 0 && isKey)
                     {
                         code.AppendLine($"                entity.HasKey(e => e.{field.Name})");
                         code.AppendLine("                      .HasName(\"PRIMARY\");");
                         code.AppendLine();
+                        isKey = false;
                     }
                     code.AppendLine($"                entity.Property(e => e.{field.Name})");
                     if (field.IsNull == "NO" && field.ColumnKey.Trim().Length <= 0) // 
@@ -415,7 +417,9 @@ namespace {0}.Database
         {
             foreach (var checkedTable in CheckedTables)
             {
-                var (database, table, _) = InitInfo(checkedTable);
+                var (database, table, fields) = InitInfo(checkedTable);
+                if (!fields.Any()) continue;
+                if (fields.All(x => x.ColumnKey.Trim().Length < 1)) continue;
 
                 #region BaseService
                 Directory.CreateDirectory($"{Project.Path}/{ProjectName}.Services");
@@ -594,6 +598,7 @@ namespace {ProjectName}.Services.{database.Database}
                 Database = database
             }.GetTables()?.FirstOrDefault(x => x.Name == tableName);
             if (table == null) throw new NullReferenceException(nameof(table));
+            table.Comment = table.Comment.Replace("\r\n", "");
             var fields = new FieldModel
             {
                 Table = table
@@ -608,9 +613,11 @@ namespace {ProjectName}.Services.{database.Database}
             {
                 case "bigint": return "long";
                 case "int": return "int";
+                case "text":
                 case "varchar": return "string";
                 case "datetime": return "DateTime";
                 case "decimal": return "decimal";// todo
+                case "double": return "double";
                 default: return "object";
             }
         }

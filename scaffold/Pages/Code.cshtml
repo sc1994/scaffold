@@ -96,14 +96,13 @@
     <el-dialog title="代码生成" :visible.sync="dialogFormVisible1" width="50%">
         <el-form ref="form2" :model="form2" label-width="120px">
             <el-form-item label="项目：">
-                <el-select v-model="form2.region" placeholder="请选择活动区域">
+                <el-select v-model="form2.project" placeholder="选择需要生成的项目">
                     <el-option :label="item.name" :value="item.name" v-for="item in tableData"></el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="内容：">
                 <el-checkbox-group v-model="form2.type">
                     <el-checkbox label="Model" name="type">Model</el-checkbox>
-                    <el-checkbox label="Entity" name="type">Entity</el-checkbox>
                     <el-checkbox label="Database" name="type">Database</el-checkbox>
                     <el-checkbox label="Service" name="type">Service</el-checkbox>
                     <el-checkbox label="View" name="type">View</el-checkbox>
@@ -112,7 +111,7 @@
         </el-form>
         <div slot="footer">
             <el-button v-on:click="dialogFormVisible1 = false">取 消</el-button>
-            <el-button type="primary" v-on:click="">开 始 生 成</el-button>
+            <el-button type="primary" v-on:click="startCode" :loading="btnLoading">开 始 生 成</el-button>
         </div>
     </el-dialog>
 </div>
@@ -124,7 +123,8 @@
             form: {},
             form1: {},
             form2: {
-                type: []
+                type: [],
+                project: ""
             },
             searchKey: "",
             searchVal: [],
@@ -135,7 +135,8 @@
             tableData: [],
             dialogFormVisible: false,
             dialogFormVisible1: false,
-            disForm1Name: false
+            disForm1Name: false,
+            btnLoading: false
         },
         methods: {
             search() {
@@ -144,6 +145,9 @@
                 axios.post("/table", this.searchKey.split(" ")).then(res => {
                     that.searchVal = res.data;
                     that.searchIcon = "el-icon-search";
+                    that.checkedTables = [];
+                    that.checkAll = false;
+                    that.isIndeterminate = false;
                     if (res.data.length < 1) {
                         this.$message('没有数据');
                     } else {
@@ -215,6 +219,22 @@
                         alert("删除失败");
                     }
                 });
+            },
+            startCode() {
+                var that = this;
+                this.btnLoading = true;
+                axios.post(`/code/${this.form2.project}`,
+                    {
+                        item1: this.checkedTables,
+                        item2: this.form2.type
+                    }).then(res => {
+                        if (res.data.item1) {
+                            that.$message("完成");
+                        } else {
+                            this.$message(res.data.item2);
+                        }
+                        that.btnLoading = false;
+                    });
             }
         },
         watch: {

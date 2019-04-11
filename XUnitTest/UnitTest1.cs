@@ -19,8 +19,7 @@ namespace XUnitTest
                 {
                     "TCDAILYSURPRISE_TEST.AIBSuspectSubject",
                     "TCDAILYSURPRISE_TEST.AIBGameInviteRecord"
-                },
-                Types = new List<string> { "Model" }
+                }
             };
 
             code.SaveModel();

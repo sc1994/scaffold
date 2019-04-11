@@ -1,28 +1,52 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using Microsoft.AspNetCore.Mvc;
+using scaffold.Model;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace scaffold.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class CodeController : ControllerBase
     {
-        // GET: api/Code
-        [HttpGet]
-        public IEnumerable<string> GetCode()
+        /// <summary>
+        /// 开始生成代码
+        /// </summary>
+        /// <param name="projectName"></param>
+        /// <param name="info"></param>
+        /// <returns></returns>
+        [HttpPost("{projectName}")]
+        public (bool, string) StartCode(string projectName, [FromBody] (string[] tables, string[] types) info)
         {
-            return new string[]
+            if (string.IsNullOrWhiteSpace(projectName)
+            || projectName == "undefined"
+            || info.tables == null
+            || info.types == null
+            || info.tables.Length < 1
+            || info.types.Length < 1)
             {
-                Environment.CurrentDirectory,
-                Directory.GetCurrentDirectory(),
-                Path.GetDirectoryName(typeof(Program).Assembly.Location),
-                AppContext.BaseDirectory
+                return (false, "参数不全");
+            }
+
+            var code = new CodeModel
+            {
+                ProjectName = projectName,
+                CheckedTables = info.tables.ToList(),
             };
+
+            if (info.types.Contains("Model"))
+            {
+                code.SaveModel();
+            }
+            if (info.types.Contains("Database"))
+            {
+                code.SaveDatabase();
+            }
+            if (info.types.Contains("Service"))
+            {
+                code.SaveService();
+            }
+
+            return (true, "");
         }
     }
 }
