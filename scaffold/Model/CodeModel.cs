@@ -612,12 +612,14 @@ namespace {ProjectName}.Services.{database.Database}
             switch (sqlDataType.ToLower())
             {
                 case "bigint": return "long";
-                case "int": return "int";
+                case "datetime": return "DateTime";
+
                 case "text":
                 case "varchar": return "string";
-                case "datetime": return "DateTime";
-                case "decimal": return "decimal";// todo
-                case "double": return "double";
+
+                case "int":
+                case "decimal":
+                case "double": return sqlDataType.ToLower();
                 default: return "object";
             }
         }
