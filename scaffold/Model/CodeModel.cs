@@ -28,6 +28,42 @@ namespace scaffold.Model
         public ProjectInitModel Project
                 => new ProjectInitModel().GetProjects()?.FirstOrDefault(x => x.Name == ProjectName);
 
+        private (DatabaseModel database, TableModel table, List<FieldModel> fields) InitInfo(string checkedTable)
+        {
+            var databaseName = checkedTable.Split('.')[0];
+            var tableName = checkedTable.Split('.')[1];
+
+            var database = Databases?.FirstOrDefault(x => x.Name == databaseName);
+            if (database == null) throw new NullReferenceException(nameof(database));
+            var table = new TableModel
+            {
+                Database = database
+            }.GetTables()?.FirstOrDefault(x => x.Name == tableName);
+            if (table == null) throw new NullReferenceException(nameof(table));
+            table.Comment = table.Comment.Replace("\r\n", "");
+            var fields = new FieldModel
+            {
+                Table = table
+            }.GetFields()?.ToList();
+            if (fields == null) throw new NullReferenceException(nameof(fields));
+            return (database, table, fields);
+        }
+
+        private string MapDataType(string sqlDataType)
+        {
+            switch (sqlDataType.ToLower())
+            {
+                case "bigint": return "long";
+                case "int": return "int";
+                case "text":
+                case "varchar": return "string";
+                case "datetime": return "DateTime";
+                case "decimal": return "decimal";// todo
+                case "double": return "double";
+                default: return "object";
+            }
+        }
+
         public void SaveModel()
         {
             foreach (var checkedTable in CheckedTables)
@@ -586,40 +622,14 @@ namespace {ProjectName}.Services.{database.Database}
             }
         }
 
-        private (DatabaseModel database, TableModel table, List<FieldModel> fields) InitInfo(string checkedTable)
+        public void SaveApi()
         {
-            var databaseName = checkedTable.Split('.')[0];
-            var tableName = checkedTable.Split('.')[1];
 
-            var database = Databases?.FirstOrDefault(x => x.Name == databaseName);
-            if (database == null) throw new NullReferenceException(nameof(database));
-            var table = new TableModel
-            {
-                Database = database
-            }.GetTables()?.FirstOrDefault(x => x.Name == tableName);
-            if (table == null) throw new NullReferenceException(nameof(table));
-            table.Comment = table.Comment.Replace("\r\n", "");
-            var fields = new FieldModel
-            {
-                Table = table
-            }.GetFields()?.ToList();
-            if (fields == null) throw new NullReferenceException(nameof(fields));
-            return (database, table, fields);
         }
 
-        private string MapDataType(string sqlDataType)
+        public void SaveWeb()
         {
-            switch (sqlDataType.ToLower())
-            {
-                case "bigint": return "long";
-                case "int": return "int";
-                case "text":
-                case "varchar": return "string";
-                case "datetime": return "DateTime";
-                case "decimal": return "decimal";// todo
-                case "double": return "double";
-                default: return "object";
-            }
+
         }
     }
 }
