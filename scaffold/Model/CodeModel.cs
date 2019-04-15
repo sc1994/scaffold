@@ -627,9 +627,19 @@ namespace {ProjectName}.Services.{database.Database}
 
         }
 
-        public void SaveWeb()
+        private string MapDataType(string sqlDataType)
         {
-
+            switch (sqlDataType.ToLower())
+            {
+                case "bigint": return "long";
+                case "int": return "int";
+                case "text":
+                case "varchar": return "string";
+                case "datetime": return "DateTime";
+                case "decimal": return "decimal";// todo
+                case "double": return "double";
+                default: return "object";
+            }
         }
     }
 }
