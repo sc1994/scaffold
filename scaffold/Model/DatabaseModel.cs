@@ -8,7 +8,7 @@ namespace scaffold.Model
 {
     public class DatabaseModel
     {
-        private readonly string _path = Environment.CurrentDirectory + "/wwwroot/data/databaselist.json";
+        private readonly string path = Environment.CurrentDirectory + "/wwwroot/data/databaselist.json";
 
         /// <summary>
         /// 命名
@@ -66,7 +66,7 @@ namespace scaffold.Model
             List<DatabaseModel> list;
             try
             {
-                list = JsonConvert.DeserializeObject<List<DatabaseModel>>(File.ReadAllText(_path));
+                list = JsonConvert.DeserializeObject<List<DatabaseModel>>(File.ReadAllText(path));
             }
             catch
             {
@@ -83,7 +83,7 @@ namespace scaffold.Model
             }
 
             list.Add(this);
-            File.WriteAllText(_path, JsonConvert.SerializeObject(list));
+            File.WriteAllText(path, JsonConvert.SerializeObject(list));
             return true;
         }
 
@@ -94,7 +94,7 @@ namespace scaffold.Model
         /// <returns></returns>
         public bool Save(IEnumerable<DatabaseModel> list)
         {
-            File.WriteAllText(_path, JsonConvert.SerializeObject(list));
+            File.WriteAllText(path, JsonConvert.SerializeObject(list));
             return true;
         }
 
@@ -103,7 +103,7 @@ namespace scaffold.Model
             List<DatabaseModel> list;
             try
             {
-                list = JsonConvert.DeserializeObject<List<DatabaseModel>>(File.ReadAllText(_path));
+                list = JsonConvert.DeserializeObject<List<DatabaseModel>>(File.ReadAllText(path));
             }
             catch
             {

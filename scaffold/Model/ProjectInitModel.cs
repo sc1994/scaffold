@@ -8,7 +8,7 @@ namespace scaffold.Model
 {
     public class ProjectInitModel
     {
-        private readonly string _path = Environment.CurrentDirectory + "/wwwroot/data/projectlist.json";
+        private readonly string path = Environment.CurrentDirectory + "/wwwroot/data/projectlist.json";
 
         public string Name { get; set; }
 
@@ -23,7 +23,7 @@ namespace scaffold.Model
     {
         try
         {
-            return JsonConvert.DeserializeObject<IEnumerable<ProjectInitModel>>(File.ReadAllText(_path));
+            return JsonConvert.DeserializeObject<IEnumerable<ProjectInitModel>>(File.ReadAllText(path));
         }
         catch
         {
@@ -37,7 +37,7 @@ namespace scaffold.Model
     /// <param name="list"></param>
     public void Save(IEnumerable<ProjectInitModel> list)
     {
-        File.WriteAllText(_path, JsonConvert.SerializeObject(list));
+        File.WriteAllText(path, JsonConvert.SerializeObject(list));
     }
 
     /// <summary>
