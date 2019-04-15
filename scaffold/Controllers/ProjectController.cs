@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using scaffold.Model;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace scaffold.Controllers
 {
@@ -11,13 +11,14 @@ namespace scaffold.Controllers
     {
         // GET: api/Project
         [HttpGet]
-        public IEnumerable<ProjectInitModel> GetProjects()
+        public IEnumerable<ProjectModel> GetProjects()
         {
-            return new ProjectInitModel().GetProjects() ?? new List<ProjectInitModel>();
+            var a = new ProjectModel().GetProjects().ToList() ?? new List<ProjectModel>();
+            return a;
         }
 
         [HttpPost]
-        public (bool, string) SaveProjects([FromBody]ProjectInitModel model)
+        public (bool, string) SaveProjects([FromBody]ProjectModel model)
         {
             if (string.IsNullOrWhiteSpace(model.Name)
                 || string.IsNullOrWhiteSpace(model.Path))
@@ -31,7 +32,7 @@ namespace scaffold.Controllers
         [HttpDelete("{name}")]
         public bool DeleteProjects(string name)
         {
-            var list = new ProjectInitModel().GetProjects()?.ToList();
+            var list = new ProjectModel().GetProjects()?.ToList();
 
             var model = list?.FirstOrDefault(x => x.Name == name);
             if (model == null)

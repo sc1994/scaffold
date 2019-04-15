@@ -25,8 +25,8 @@ namespace scaffold.Model
         /// 项目信息
         /// </summary>
         [JsonIgnore]
-        public ProjectInitModel Project
-                => new ProjectInitModel().GetProjects()?.FirstOrDefault(x => x.Name == ProjectName);
+        public ProjectModel Project
+                => new ProjectModel().GetProjects()?.FirstOrDefault(x => x.Name == ProjectName);
 
         private (DatabaseModel database, TableModel table, List<FieldModel> fields) InitInfo(string checkedTable)
         {
@@ -54,12 +54,14 @@ namespace scaffold.Model
             switch (sqlDataType.ToLower())
             {
                 case "bigint": return "long";
-                case "int": return "int";
+                case "datetime": return "DateTime";
+
                 case "text":
                 case "varchar": return "string";
-                case "datetime": return "DateTime";
-                case "decimal": return "decimal";// todo
-                case "double": return "double";
+
+                case "int":
+                case "decimal":
+                case "double": return sqlDataType.ToLower();
                 default: return "object";
             }
         }
@@ -624,22 +626,46 @@ namespace {ProjectName}.Services.{database.Database}
 
         public void SaveApi()
         {
+            #region 创建IoC容器
+            var codeStr =
+$@"        /// <summary>
+        /// 注入
+        /// </summary>
+        /// <param name=""services""></param>
+        public static void Transfuse(IServiceCollection services)
+        {{
+            // 单例（Singleton）生命周期服务在它们第一次被请求时创建，或者如果你在 ConfigureServices运行时指定一个实例）
+            // 并且每个后续请求将使用相同的实例。如果你的应用程序需要单例行为，
+            // 建议让服务容器管理服务的生命周期而不是在自己的类中实现单例模式和管理对象的生命周期。
+            // 参考文章 http://www.cnblogs.com/dotNETCoreSG/p/aspnetcore-3_10-dependency-injection.html
 
+            var allTypes = Assembly.Load(""{ProjectName}.Services"").GetTypes(); // 获取这个命名空间下的全部实例注入
+
+            var allInstances = new Dictionary<Type, Type>();
+            foreach (var type in allTypes)
+            {{
+                if (type.GetTypeInfo().IsInterface)
+                {{
+                    var instance = allTypes.FirstOrDefault(x => x.Name == type.Name.Substring(1, type.Name.Length - 1));
+                    if (instance != null)
+                    {{
+                        allInstances.Add(type, instance);
+                    }}
+                }}
+            }}
+
+            foreach (var instance in allInstances)
+            {{
+                services.AddSingleton(instance.Key, instance.Value);
+            }}
+        }}";
+
+            #endregion
         }
 
-        private string MapDataType(string sqlDataType)
+        public void SaveWeb()
         {
-            switch (sqlDataType.ToLower())
-            {
-                case "bigint": return "long";
-                case "int": return "int";
-                case "text":
-                case "varchar": return "string";
-                case "datetime": return "DateTime";
-                case "decimal": return "decimal";// todo
-                case "double": return "double";
-                default: return "object";
-            }
+
         }
     }
 }
