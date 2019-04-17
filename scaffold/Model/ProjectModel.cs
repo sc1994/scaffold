@@ -16,6 +16,8 @@ namespace scaffold.Model
 
         public List<KeyValue> ItemDictionary { get; set; }
 
+        public string this[string key] => ItemDictionary.FirstOrDefault(x => x.Key == key)?.Value;
+
         /// <summary>
         /// GetProjects
         /// </summary>

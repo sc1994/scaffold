@@ -33,7 +33,7 @@ namespace scaffold.Controllers
                 CheckedTables = info.tables.ToList(),
             };
 
-            if (info.types.Contains("Model"))
+            if (info.types.Contains("Models"))
             {
                 code.SaveModel();
             }
@@ -41,9 +41,13 @@ namespace scaffold.Controllers
             {
                 code.SaveDatabase();
             }
-            if (info.types.Contains("Service"))
+            if (info.types.Contains("Services"))
             {
                 code.SaveService();
+            }
+            if (info.types.Contains("Api"))
+            {
+                code.SaveApi();
             }
 
             return (true, "");

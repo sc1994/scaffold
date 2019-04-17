@@ -75,15 +75,16 @@ namespace scaffold.Model
                 if (fields.All(x => x.ColumnKey.Trim().Length < 1)) continue;
 
                 var code = new StringBuilder();
-                code.AppendLine("//=============系统自动生成=============");
-                code.AppendLine($"//时间：{DateTime.Now:g}");
-                code.AppendLine("//备注：表字段对应的数据模型。请勿在此文件中变动代码。");
-                code.AppendLine("//=============系统自动生成=============");
-                code.AppendLine("using System;");
-                code.AppendLine("using System.ComponentModel.DataAnnotations.Schema;");
+                code.AppendLine("// =============系统自动生成=============");
+                code.AppendLine($"// 时间：{DateTime.Now:g}");
+                code.AppendLine("// 备注：表字段对应的数据模型。请勿在此文件中变动代码。");
+                code.AppendLine("// =============系统自动生成=============");
                 code.AppendLine("// ReSharper disable InconsistentNaming");
                 code.AppendLine();
-                code.AppendLine($"namespace {ProjectName}.Models.{database.Database}");
+                code.AppendLine("using System;");
+                code.AppendLine("using System.ComponentModel.DataAnnotations.Schema;");
+                code.AppendLine();
+                code.AppendLine($"namespace {Project["Models"]}.{database.Database}");
                 code.AppendLine("{");
                 code.AppendLine($"    /// <summary>{table.Comment}</summary>");
                 code.AppendLine($"    [Table(\"{table.Name}\")]");
@@ -98,7 +99,7 @@ namespace scaffold.Model
                 }
                 code.AppendLine("    }");
                 code.AppendLine("}");
-                var path = $"{Project.Path}/{ProjectName}.Models/{database.Database}Model";
+                var path = $"{Project.Path}/{Project["Models"]}/{database.Database}Model";
                 Directory.CreateDirectory(path);
                 path += $"/{table.Name}.cs";
                 File.WriteAllText(path, code.ToString());
@@ -113,7 +114,7 @@ namespace scaffold.Model
                 if (!fields.Any()) continue;
                 if (fields.All(x => x.ColumnKey.Trim().Length < 1)) continue;
 
-                var path = $"{Project.Path}/{ProjectName}.Database/{database.Database}";
+                var path = $"{Project.Path}/{Project["Database"]}/{database.Database}";
                 Directory.CreateDirectory(path);
                 var contextPath = $"{path}/1_{database.Database}Context.cs";
                 StringBuilder code;
@@ -157,13 +158,14 @@ namespace scaffold.Model
                 {
                     #region 初始化数据结构声明主方法
                     code = new StringBuilder();
-                    code.AppendLine("//=============系统自动生成=============");
-                    code.AppendLine($"//时间：{DateTime.Now:g}");
-                    code.AppendLine("//备注：依次注入表结构到EF框架中。请勿在此文件中变动代码。");
-                    code.AppendLine("//=============系统自动生成=============");
+                    code.AppendLine("// =============系统自动生成=============");
+                    code.AppendLine($"// 时间：{DateTime.Now:g}");
+                    code.AppendLine("// 备注：依次注入表结构到EF框架中。请勿在此文件中变动代码。");
+                    code.AppendLine("// =============系统自动生成=============");
+                    code.AppendLine();
                     code.AppendLine("using Microsoft.EntityFrameworkCore;");
                     code.AppendLine();
-                    code.AppendLine($"namespace {ProjectName}.Database.{database.Database}");
+                    code.AppendLine($"namespace {Project["Database"]}.{database.Database}");
                     code.AppendLine("{");
                     code.AppendLine("    /// <inheritdoc />");
                     code.AppendLine("    /// <summary>");
@@ -189,26 +191,25 @@ namespace scaffold.Model
 
                 #region 生成数据结构扩展代码
                 code = new StringBuilder();
-                code.AppendLine("//=============系统自动生成=============");
-                code.AppendLine($"//时间：{DateTime.Now:g}");
-                code.AppendLine("//备注：简单的数据库操作方法，以及声明表结构。请勿在此文件中变动代码。");
-                code.AppendLine("//=============系统自动生成=============");
+                code.AppendLine("// =============系统自动生成=============");
+                code.AppendLine($"// 时间：{DateTime.Now:g}");
+                code.AppendLine("// 备注：简单的数据库操作方法，以及声明表结构。请勿在此文件中变动代码。");
+                code.AppendLine("// =============系统自动生成=============");
+                code.AppendLine();
                 code.AppendLine("using System;");
                 code.AppendLine("using System.Linq;");
                 code.AppendLine("using System.Threading.Tasks;");
                 code.AppendLine("using System.Linq.Expressions;");
                 code.AppendLine("using System.Collections.Generic;");
                 code.AppendLine("using Microsoft.EntityFrameworkCore;");
-                code.AppendLine($"using {ProjectName}.Models.{database.Database};");
+                code.AppendLine($"using {Project["Models"]}.{database.Database};");
                 code.AppendLine();
-                code.AppendLine($"namespace {ProjectName}.Database.{database.Database}");
+                code.AppendLine($"namespace {Project["Database"]}.{database.Database}");
                 code.AppendLine("{");
                 code.AppendLine($"    /// <summary>{table.Comment}</summary>");
                 code.AppendLine($"    public partial class {table.Name}Storage : BaseStorage<{database.Database}Context, {table.Name}Model>");
                 code.AppendLine("    {");
-                code.AppendLine("        /// <summary>");
-                code.AppendLine("        /// 第一个或者默认值");
-                code.AppendLine("        /// </summary>");
+                code.AppendLine("        /// <summary>单个查询</summary>");
                 code.AppendLine("        /// <param name=\"predicate\">搜索条件</param>");
                 code.AppendLine("        /// <returns></returns>");
                 code.AppendLine($"        public override async Task<{table.Name}Model> FirstOrDefaultAsync(Expression<Func<{table.Name}Model, bool>> predicate)");
@@ -217,15 +218,22 @@ namespace scaffold.Model
                 code.AppendLine($"                return await context.{table.Name}Model.FirstOrDefaultAsync(predicate);");
                 code.AppendLine("        }");
                 code.AppendLine();
-                code.AppendLine("        /// <summary>");
-                code.AppendLine("        /// 简单查询");
-                code.AppendLine("        /// </summary>");
+                code.AppendLine("        /// <summary>简单查询</summary>");
                 code.AppendLine("        /// <param name=\"predicate\">搜索条件</param>");
+                code.AppendLine("        /// <param name=\"index\"></param>");
+                code.AppendLine("        /// <param name=\"size\"></param>");
                 code.AppendLine("        /// <returns></returns>");
-                code.AppendLine($"        public override async Task<List<{table.Name}Model>> FindAsync(Expression<Func<{table.Name}Model, bool>> predicate)");
+                code.AppendLine($"        public override async Task<List<{table.Name}Model>> FindAsync(");
+                code.AppendLine($"            Expression<Func<{table.Name}Model, bool>> predicate,");
+                code.AppendLine("            int index = 0, int size = 0)");
                 code.AppendLine("        {");
                 code.AppendLine($"            using (var context = new {database.Database}Context())");
-                code.AppendLine($"                return await context.{table.Name}Model.Where(predicate).ToListAsync();");
+                code.AppendLine("            {");
+                code.AppendLine($"                var query = context.{table.Name}Model.Where(predicate);");
+                code.AppendLine("                if (index > 0 && size > 0)");
+                code.AppendLine("                    query = query.Skip((index - 1) * size).Take(size);");
+                code.AppendLine("                return await query.ToListAsync();");
+                code.AppendLine("            }");
                 code.AppendLine("        }");
                 code.AppendLine("    }");
                 code.AppendLine();
@@ -274,10 +282,17 @@ namespace scaffold.Model
                 if (!File.Exists($"{path}/{table.Name}Storage.cs"))
                 {
                     code = new StringBuilder();
-                    code.AppendLine($"namespace {ProjectName}.Database.{database.Database}");
+                    code.AppendLine($"using {Project["Models"]}.{database.Database};");
+                    code.AppendLine();
+                    code.AppendLine($"namespace {Project["Database"]}.{database.Database}");
                     code.AppendLine("{");
+                    code.AppendLine($"    /// <summary>{table.Comment}接口</summary>");
+                    code.AppendLine($"    public interface I{table.Name}Storage : IBaseStorage<{table.Name}Model>");
+                    code.AppendLine("    {");
+                    code.AppendLine("    }");
+                    code.AppendLine();
                     code.AppendLine($"    /// <summary>{table.Comment}</summary>");
-                    code.AppendLine($"    public partial class {table.Name}Storage");
+                    code.AppendLine($"    public partial class {table.Name}Storage : I{table.Name}Storage");
                     code.AppendLine("    {");
                     code.AppendLine("    }");
                     code.AppendLine("}");
@@ -286,7 +301,7 @@ namespace scaffold.Model
                 #endregion
 
                 #region 生成BaseContext
-                var pathBase = $"{Project.Path}/{ProjectName}.Database/BaseContext.cs";
+                var pathBase = $"{Project.Path}/{Project["Database"]}/BaseContext.cs";
                 if (!File.Exists(path))
                 {
                     var codeStr =
@@ -296,7 +311,7 @@ using System.Linq.Expressions;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace {0}.Database
+namespace {0}
 {
     public class BaseContext<TContext> : DbContext
         where TContext : DbContext
@@ -316,56 +331,56 @@ namespace {0}.Database
     public interface IBaseStorage<TModel>
         where TModel : class
     {
-        /// <summary>
-        /// 新增
-        /// </summary>
+        /// <summary>新增</summary>
         /// <param name=""model""></param>
         /// <returns></returns>
         Task<(bool done, TModel after)> AddAsync(TModel model);
 
-        /// <summary>
-        /// 批量新增
-        /// </summary>
+        /// <summary>批量新增</summary>
         /// <param name=""list""></param>
         /// <returns></returns>
         Task<int> AddRangeAsync(IEnumerable<TModel> list);
 
-        /// <summary>
-        /// 更新
-        /// </summary>
+        /// <summary>删除</summary>
         /// <param name=""model""></param>
         /// <returns></returns>
-        (bool done, TModel after) Update(TModel model);
+        Task<int> RemoveAsync(TModel model);
 
-        /// <summary>
-        /// 批量更新
-        /// </summary>
+        /// <summary>批量删除</summary>
         /// <param name=""list""></param>
         /// <returns></returns>
-        int UpdateRange(IEnumerable<TModel> list);
+        Task<int> RemoveRangeAsync(IEnumerable<TModel> list);
 
-        /// <summary>
-        /// 单个查询
-        /// </summary>
-        /// <param name=""predicate""></param>
+        /// <summary>更新</summary>
+        /// <param name=""model""></param>
+        /// <returns></returns>
+        Task<(bool done, TModel after)> UpdateAsync(TModel model);
+
+        /// <summary>批量更新</summary>
+        /// <param name=""list""></param>
+        /// <returns></returns>
+        Task<int> UpdateRangeAsync(IEnumerable<TModel> list);
+
+        /// <summary>单个查询</summary>
+        /// <param name=""predicate"">搜索条件</param>
         /// <returns></returns>
         Task<TModel> FirstOrDefaultAsync(Expression<Func<TModel, bool>> predicate);
 
-        /// <summary>
-        /// 简单查询
-        /// </summary>
-        /// <param name=""predicate""></param>
+        /// <summary>简单查询</summary>
+        /// <param name=""predicate"">搜索条件</param>
+        /// <param name=""index""></param>
+        /// <param name=""size""></param>
         /// <returns></returns>
-        Task<List<TModel>> FindAsync(Expression<Func<TModel, bool>> predicate);
+        Task<List<TModel>> FindAsync(
+            Expression<Func<TModel, bool>> predicate,
+            int index = 0, int size = 0);
     }
 
     public class BaseStorage<TContext, TModel> : IBaseStorage<TModel>
         where TContext : DbContext, new()
         where TModel : class
     {
-        /// <summary>
-        /// 新增
-        /// </summary>
+        /// <summary>新增</summary>
         /// <param name=""model""></param>
         /// <returns></returns>
         public async Task<(bool done, TModel after)> AddAsync(TModel model)
@@ -373,14 +388,12 @@ namespace {0}.Database
             using (var context = new TContext())
             {
                 var after = await context.AddAsync(model);
-                var change = context.SaveChanges();
+                var change = await context.SaveChangesAsync();
                 return (change > 0, after.Entity);
             }
         }
 
-        /// <summary>
-        /// 批量新增
-        /// </summary>
+        /// <summary>批量新增</summary>
         /// <param name=""list""></param>
         /// <returns></returns>
         public async Task<int> AddRangeAsync(IEnumerable<TModel> list)
@@ -388,63 +401,83 @@ namespace {0}.Database
             using (var context = new TContext())
             {
                 await context.AddRangeAsync(list);
-                var change = context.SaveChanges();
+                var change = await context.SaveChangesAsync();
                 return change;
             }
         }
 
-        /// <summary>
-        /// 更新
-        /// </summary>
+        /// <summary>删除</summary>
         /// <param name=""model""></param>
         /// <returns></returns>
-        public (bool done, TModel after) Update(TModel model)
+        public async Task<int> RemoveAsync(TModel model)
+        {
+            using (var context = new TContext())
+            {
+                context.Remove(model);
+                return await context.SaveChangesAsync();
+            }
+        }
+
+        /// <summary>批量删除</summary>
+        /// <param name=""list""></param>
+        /// <returns></returns>
+        public async Task<int> RemoveRangeAsync(IEnumerable<TModel> list)
+        {
+            using (var context = new TContext())
+            {
+                context.RemoveRange(list);
+                return await context.SaveChangesAsync();
+            }
+        }
+
+        /// <summary>更新</summary>
+        /// <param name=""model""></param>
+        /// <returns></returns>
+        public async Task<(bool done, TModel after)> UpdateAsync(TModel model)
         {
             using (var context = new TContext())
             {
                 var after = context.Update(model);
-                var change = context.SaveChanges();
+                var change = await context.SaveChangesAsync();
                 return (change > 0, after.Entity);
             }
         }
 
-        /// <summary>
-        /// 批量更新
-        /// </summary>
+        /// <summary>批量更新</summary>
         /// <param name=""list""></param>
         /// <returns></returns>
-        public int UpdateRange(IEnumerable<TModel> list)
+        public async Task<int> UpdateRangeAsync(IEnumerable<TModel> list)
         {
             using (var context = new TContext())
             {
                 context.UpdateRange(list);
-                var change = context.SaveChanges();
+                var change = await context.SaveChangesAsync();
                 return change;
             }
         }
 
-        /// <summary>
-        /// 单个查询
-        /// </summary>
-        /// <param name=""predicate""></param>
+        /// <summary>单个查询</summary>
+        /// <param name=""predicate"">搜索条件</param>
         /// <returns></returns>
         public virtual Task<TModel> FirstOrDefaultAsync(Expression<Func<TModel, bool>> predicate)
         {
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// 简单查询
-        /// </summary>
-        /// <param name=""predicate""></param>
+        /// <summary>简单查询</summary>
+        /// <param name=""predicate"">搜索条件</param>
+        /// <param name=""index""></param>
+        /// <param name=""size""></param>
         /// <returns></returns>
-        public virtual Task<List<TModel>> FindAsync(Expression<Func<TModel, bool>> predicate)
+        public virtual  Task<List<TModel>> FindAsync(
+            Expression<Func<TModel, bool>> predicate,
+            int index = 0, int size = 0)
         {
             throw new NotImplementedException();
         }
     }
 }";
-                    codeStr = codeStr.Replace("{0}", ProjectName);
+                    codeStr = codeStr.Replace("{0}", Project["Database"]);
                     File.WriteAllText(pathBase, codeStr);
                 }
                 #endregion
@@ -460,8 +493,8 @@ namespace {0}.Database
                 if (fields.All(x => x.ColumnKey.Trim().Length < 1)) continue;
 
                 #region BaseService
-                Directory.CreateDirectory($"{Project.Path}/{ProjectName}.Services");
-                var pathBase = $"{Project.Path}/{ProjectName}.Services/BaseService.cs";
+                Directory.CreateDirectory($"{Project.Path}/{Project["Services"]}");
+                var pathBase = $"{Project.Path}/{Project["Services"]}/BaseService.cs";
                 if (!File.Exists(pathBase))
                 {
                     var codeStr =
@@ -469,54 +502,56 @@ namespace {0}.Database
 using System.Threading.Tasks;
 using System.Linq.Expressions;
 using System.Collections.Generic;
-using {0}.Database;
+using {0};
 
-namespace {0}.Services
+namespace {1}
 {
     public interface IBaseService<TModel>
         where TModel : class
     {
-        /// <summary>
-        /// 新增
-        /// </summary>
+        /// <summary>新增</summary>
         /// <param name=""model""></param>
         /// <returns></returns>
         Task<(bool done, TModel after)> AddAsync(TModel model);
 
-        /// <summary>
-        /// 批量新增
-        /// </summary>
+        /// <summary>批量新增</summary>
         /// <param name=""list""></param>
         /// <returns></returns>
         Task<int> AddRangeAsync(IEnumerable<TModel> list);
 
-        /// <summary>
-        /// 更新
-        /// </summary>
+        /// <summary>删除</summary>
         /// <param name=""model""></param>
         /// <returns></returns>
-        (bool done, TModel after) Update(TModel model);
+        Task<int> RemoveAsync(TModel model);
 
-        /// <summary>
-        /// 批量更新
-        /// </summary>
+        /// <summary>批量删除</summary>
         /// <param name=""list""></param>
         /// <returns></returns>
-        int UpdateRange(IEnumerable<TModel> list);
+        Task<int> RemoveRangeAsync(IEnumerable<TModel> list);
 
-        /// <summary>
-        /// 单个查询
-        /// </summary>
-        /// <param name=""predicate""></param>
+        /// <summary>更新</summary>
+        /// <param name=""model""></param>
+        /// <returns></returns>
+        Task<(bool done, TModel after)> UpdateAsync(TModel model);
+
+        /// <summary>批量更新</summary>
+        /// <param name=""list""></param>
+        /// <returns></returns>
+        Task<int> UpdateRangeAsync(IEnumerable<TModel> list);
+
+        /// <summary>单个查询</summary>
+        /// <param name=""predicate"">搜索条件</param>
         /// <returns></returns>
         Task<TModel> FirstOrDefaultAsync(Expression<Func<TModel, bool>> predicate);
 
-        /// <summary>
-        /// 简单查询
-        /// </summary>
-        /// <param name=""predicate""></param>
+        /// <summary>简单查询</summary>
+        /// <param name=""predicate"">搜索条件</param>
+        /// <param name=""index""></param>
+        /// <param name=""size""></param>
         /// <returns></returns>
-        Task<List<TModel>> FindAsync(Expression<Func<TModel, bool>> predicate);
+        Task<List<TModel>> FindAsync(
+            Expression<Func<TModel, bool>> predicate,
+            int index = 0, int size = 0);
     }
 
     public class BaseService<TModel> : IBaseService<TModel>
@@ -529,9 +564,7 @@ namespace {0}.Services
             _storage = storage;
         }
 
-        /// <summary>
-        /// 新增
-        /// </summary>
+        /// <summary>新增</summary>
         /// <param name=""model""></param>
         /// <returns></returns>
         public async Task<(bool done, TModel after)> AddAsync(TModel model)
@@ -539,9 +572,7 @@ namespace {0}.Services
             return await _storage.AddAsync(model);
         }
 
-        /// <summary>
-        /// 批量新增
-        /// </summary>
+        /// <summary>批量新增</summary>
         /// <param name=""list""></param>
         /// <returns></returns>
         public async Task<int> AddRangeAsync(IEnumerable<TModel> list)
@@ -549,73 +580,83 @@ namespace {0}.Services
             return await _storage.AddRangeAsync(list);
         }
 
-        /// <summary>
-        /// 简单查询
-        /// </summary>
-        /// <param name=""predicate""></param>
+        /// <summary>删除</summary>
+        /// <param name=""model""></param>
         /// <returns></returns>
-        public async Task<List<TModel>> FindAsync(Expression<Func<TModel, bool>> predicate)
+        public async Task<int> RemoveAsync(TModel model)
         {
-            return await _storage.FindAsync(predicate);
+            return await _storage.RemoveAsync(model);
         }
 
-        /// <summary>
-        /// 单个查询
-        /// </summary>
-        /// <param name=""predicate""></param>
+        /// <summary>批量删除</summary>
+        /// <param name=""list""></param>
+        /// <returns></returns>
+        public async Task<int> RemoveRangeAsync(IEnumerable<TModel> list)
+        {
+            return await _storage.RemoveRangeAsync(list);
+        }
+
+        /// <summary>更新</summary>
+        /// <param name=""model""></param>
+        /// <returns></returns>
+        public async Task<(bool done, TModel after)> UpdateAsync(TModel model)
+        {
+            return await _storage.UpdateAsync(model);
+        }
+
+        /// <summary>批量更新</summary>
+        /// <param name=""list""></param>
+        /// <returns></returns>
+        public async Task<int> UpdateRangeAsync(IEnumerable<TModel> list)
+        {
+            return await _storage.UpdateRangeAsync(list);
+        }
+
+        /// <summary>单个查询</summary>
+        /// <param name=""predicate"">搜索条件</param>
         /// <returns></returns>
         public async Task<TModel> FirstOrDefaultAsync(Expression<Func<TModel, bool>> predicate)
         {
             return await _storage.FirstOrDefaultAsync(predicate);
         }
 
-        /// <summary>
-        /// 更新
-        /// </summary>
-        /// <param name=""model""></param>
+        /// <summary>简单查询</summary>
+        /// <param name=""predicate"">搜索条件</param>
+        /// <param name=""index""></param>
+        /// <param name=""size""></param>
         /// <returns></returns>
-        public (bool done, TModel after) Update(TModel model)
+        public async Task<List<TModel>> FindAsync(
+            Expression<Func<TModel, bool>> predicate,
+            int index = 0, int size = 0)
         {
-            return _storage.Update(model);
-        }
-
-        /// <summary>
-        /// 批量更新
-        /// </summary>
-        /// <param name=""list""></param>
-        /// <returns></returns>
-        public int UpdateRange(IEnumerable<TModel> list)
-        {
-            return _storage.UpdateRange(list);
+            return await _storage.FindAsync(predicate, index, size);
         }
     }
 }";
-                    File.WriteAllText(pathBase, codeStr.Replace("{0}", ProjectName));
+                    File.WriteAllText(pathBase, codeStr.Replace("{0}", Project["Database"]).Replace("{1}", Project["Services"]));
                 }
                 #endregion
-                Directory.CreateDirectory($"{Project.Path}/{ProjectName}.Services/{database.Database}");
-                var path = $"{Project.Path}/{ProjectName}.Services/{database.Database}/{table.Name}Service.cs";
+
+                Directory.CreateDirectory($"{Project.Path}/{Project["Services"]}/{database.Database}");
+                var path = $"{Project.Path}/{Project["Services"]}/{database.Database}/{table.Name}Service.cs";
                 if (!File.Exists(path))
                 {
                     var codeStr =
-$@"using {ProjectName}.Database;
-using {ProjectName}.Models.{database.Database};
-using {ProjectName}.Database.{database.Database};
+$@"using {Project["Models"]}.{database.Database};
+using {Project["Database"]}.{database.Database};
 
-namespace {ProjectName}.Services.{database.Database}
+namespace {Project["Services"]}.{database.Database}
 {{
     /// <summary>{table.Comment}接口</summary>
-    public interface I{table.Name}Service : IBaseStorage<{table.Name}Model>
+    public interface I{table.Name}Service : IBaseService<{table.Name}Model>
     {{
-        
     }}
 
     /// <summary>{table.Comment}服务</summary>
     public class {table.Name}Service : BaseService<{table.Name}Model>, I{table.Name}Service
     {{
-        private static readonly IBaseStorage<{table.Name}Model> Storage = new {table.Name}Storage();
-
-        public {table.Name}Service() : base(Storage) {{ }}
+        public {table.Name}Service(I{table.Name}Storage storage) : base(storage)
+        {{ }}
     }}
 }}";
                     File.WriteAllText(path, codeStr);
@@ -626,9 +667,10 @@ namespace {ProjectName}.Services.{database.Database}
 
         public void SaveApi()
         {
-            #region 创建IoC容器
+            #region 注入
             var codeStr =
-$@"        /// <summary>
+$@"        
+        /// <summary>
         /// 注入
         /// </summary>
         /// <param name=""services""></param>
@@ -639,9 +681,9 @@ $@"        /// <summary>
             // 建议让服务容器管理服务的生命周期而不是在自己的类中实现单例模式和管理对象的生命周期。
             // 参考文章 http://www.cnblogs.com/dotNETCoreSG/p/aspnetcore-3_10-dependency-injection.html
 
-            var allTypes = Assembly.Load(""{ProjectName}.Services"").GetTypes(); // 获取这个命名空间下的全部实例注入
+            var allTypes = Assembly.Load(""{Project["Services"]}"").GetTypes().ToList(); 
+            allTypes.AddRange(Assembly.Load(""{Project["Database"]}"").GetTypes()); // 获取命名空间下的全部实例
 
-            var allInstances = new Dictionary<Type, Type>();
             foreach (var type in allTypes)
             {{
                 if (type.GetTypeInfo().IsInterface)
@@ -649,16 +691,177 @@ $@"        /// <summary>
                     var instance = allTypes.FirstOrDefault(x => x.Name == type.Name.Substring(1, type.Name.Length - 1));
                     if (instance != null)
                     {{
-                        allInstances.Add(type, instance);
+                        services.AddSingleton(type, instance); // 注入
                     }}
                 }}
             }}
-
-            foreach (var instance in allInstances)
-            {{
-                services.AddSingleton(instance.Key, instance.Value);
-            }}
         }}";
+            var basePath = $"{Project.Path}/{Project["Api"]}";
+            var startupPath = basePath + "/Startup.cs";
+            if (File.Exists(startupPath))
+            {
+                var codeLines = File.ReadAllLines(startupPath).ToList();
+                for (var configureServicesIndex = codeLines.FindIndex(x => x.Trim() == "public void ConfigureServices(IServiceCollection services)");
+                    configureServicesIndex < codeLines.Count;
+                    configureServicesIndex++)
+                {
+                    var line = codeLines[configureServicesIndex];
+
+                    if (line.Trim() == "Transfuse(services);")
+                    {
+                        break;
+                    }
+                    if (line.Trim() == "}")
+                    {
+                        codeLines.Insert(configureServicesIndex, "            Transfuse(services);");
+                        break;
+                    }
+                }
+
+                if (codeLines.All(x => x.Trim() != "public static void Transfuse(IServiceCollection services)"))
+                {
+                    var lastFirst = codeLines.FindLastIndex(x => x.Trim() == "}");
+                    codeLines.RemoveAt(lastFirst);
+                    var lastSecond = codeLines.FindLastIndex(x => x.Trim() == "}");
+                    codeLines.Insert(lastSecond, codeStr);
+                    codeLines.Add("}");
+                    File.WriteAllLines(startupPath, codeLines);
+                }
+            }
+            #endregion
+
+            #region 接口
+            foreach (var checkedTable in CheckedTables)
+            {
+                var (database, table, fields) = InitInfo(checkedTable);
+                if (!fields.Any()) continue;
+                if (fields.All(x => x.ColumnKey.Trim().Length < 1)) continue;
+
+                var code = new StringBuilder();
+                code.AppendLine("using System;");
+                code.AppendLine("using NPoco.Expressions;");
+                code.AppendLine("using System.Threading.Tasks;");
+                code.AppendLine("using System.Linq.Expressions;");
+                code.AppendLine("using Microsoft.AspNetCore.Mvc;");
+                code.AppendLine("using System.Collections.Generic;");
+                code.AppendLine($"using {Project["Models"]}.{database.Database};");
+                code.AppendLine();
+                code.AppendLine($"namespace {Project["Api"]}.Controllers");
+                code.AppendLine("{");
+                code.AppendLine($"    [Route(\"{database.Database}/[controller]\")]");
+                code.AppendLine("    [ApiController]");
+                code.AppendLine($"    public partial class {table.Name}Controller : ControllerBase");
+                code.AppendLine("    {");
+
+                code.AppendLine(
+@"        /// <summary>查询</summary>
+        /// <param name=""screen""></param>
+        /// <param name=""index""></param>
+        /// <param name=""size""></param>
+        /// <returns></returns>");
+
+                code.AppendLine("        [HttpPost(\"{index}/{size}\")]");
+                code.AppendLine($"        public async Task<IEnumerable<{table.Name}Model>> Get{table.Name}List(");
+                code.AppendLine($"            [FromBody] {table.Name}Model screen,");
+                code.AppendLine("            int index, int size)");
+                code.AppendLine("        {");
+                code.AppendLine($"            Expression<Func<{table.Name}Model, bool>> predicate = null;");
+                code.AppendLine($"            var defaultModel = new {table.Name}Model();");
+                code.AppendLine();
+                foreach (var field in fields)
+                {
+                    if (fields.IndexOf(field) == 0)
+                    {
+                        code.AppendLine($"            if (defaultModel.{field.Name} != screen.{field.Name})");
+                        code.AppendLine($"                predicate = x => x.{field.Name} == screen.{field.Name};");
+                        continue;
+                    }
+                    code.AppendLine($"            if (defaultModel.{field.Name} != screen.{field.Name})");
+                    code.AppendLine("            {");
+                    code.AppendLine("                if (predicate == null)");
+                    code.AppendLine($"                    predicate = x => x.{field.Name} == screen.{field.Name};");
+                    code.AppendLine($"                predicate = predicate.And(x => x.{field.Name} == screen.{field.Name});");
+                    code.AppendLine("            }");
+                }
+                var key = fields.FirstOrDefault(x => string.IsNullOrWhiteSpace(x.ColumnKey));
+                if (key != null)
+                {
+                    code.AppendLine("            if (predicate == null)");
+                    code.AppendLine($"                predicate = x => x.{key.Name}.ToString() != \"\"; // 添加默认条件，不推荐，务必在查询时加上条件");
+                }
+                code.AppendLine();
+                code.AppendLine("            return await _service.FindAsync(predicate, index, size);");
+                code.AppendLine("        }");
+
+
+                if (key != null)
+                {
+                    code.AppendLine($@"        
+        /// <summary>获取单个数据</summary>
+        /// <param name=""id""></param>
+        /// <returns></returns>
+        [HttpGet(""{{id}}"")]
+        public async Task<{table.Name}Model> Get{table.Name}Model({MapDataType(key.Type)} id)
+            => await _service.FirstOrDefaultAsync(x => x.{key.Name} == id);");
+                }
+
+                code.AppendLine($@"        
+        /// <summary>添加</summary>
+        /// <param name=""value""></param>
+        [HttpPost]
+        public async Task<bool> Add{table.Name}([FromBody] {table.Name}Model value)
+            => (await _service.AddAsync(value)).done;");
+                if (key != null)
+                {
+                    code.AppendLine($@"
+        /// <summary>修改</summary>
+        /// <param name=""id""></param>
+        [HttpPut(""{{id}}"")]
+        public async Task<bool> Edit{table.Name}({MapDataType(key.Type)} id)
+        {{
+            var model = await Get{table.Name}Model(id);
+            if (model == null) return false;
+            return (await _service.UpdateAsync(model)).done;
+        }}");
+                    code.AppendLine($@"
+        /// <summary>删除</summary>
+        /// <param name=""id""></param>
+        [HttpDelete(""{{id}}"")]
+        public async Task<bool> Delete{table.Name}({MapDataType(key.Type)} id)
+        {{
+            var model = await Get{table.Name}Model(id);
+            if (model == null) return false;
+            return await _service.RemoveAsync(model) > 0;
+        }}");
+                }
+                code.AppendLine("    }");
+                code.AppendLine("}");
+                File.WriteAllText($"{basePath}/Controllers/{table.Name}ControllerExtend.cs", code.ToString());
+
+                // 主文件
+                if (!File.Exists($"{basePath}/Controllers/{table.Name}Controller.cs"))
+                {
+                    code = new StringBuilder();
+                    code.AppendLine(
+$@"using {Project["Services"]}.{database.Database};
+
+namespace {Project["Api"]}.Controllers
+{{
+    public partial class {table.Name}Controller
+    {{
+        private readonly I{table.Name}Service _service;
+
+        public {table.Name}Controller(I{table.Name}Service service)
+        {{
+            _service = service;
+        }}
+    }}
+}}");
+                    File.WriteAllText($"{basePath}/Controllers/{table.Name}Controller.cs", code.ToString());
+                }
+            }
+
+
 
             #endregion
         }
