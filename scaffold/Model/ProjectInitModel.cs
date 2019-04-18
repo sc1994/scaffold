@@ -4,7 +4,9 @@
 // ReSharper disable UnusedMember.Global
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -14,7 +16,47 @@ namespace scaffold.Model
 {
     public partial class ProjectInitModel
     {
+        [XmlIgnore]
         public string SetPath { get; set; }
+
+        public static void AddNuget(string path, string nuget, string version)
+        {
+            var projectXML = File.ReadAllText(path);
+            var project = XmlToObject(projectXML);
+            var item = project.ItemGroup.FirstOrDefault(x => x.PackageReference?.ToList().Count > 0);
+
+            if (item == null)
+            {
+                var tempList = project.ItemGroup.ToList();
+                tempList.Add(new ProjectItemGroup
+                {
+                    PackageReference = new[]
+                   {
+                        new ProjectItemGroupPackageReference
+                        {
+                            Include = nuget,
+                            Version = version
+                        }
+                    }
+                });
+                project.ItemGroup = tempList.ToArray();
+                File.WriteAllText(path, ToXml(project));
+            }
+            else
+            {
+                if (item.PackageReference.All(x => x.Include == nuget))
+                {
+                    var tempList = item.PackageReference.ToList();
+                    tempList.Add(new ProjectItemGroupPackageReference
+                    {
+                        Include = nuget,
+                        Version = version
+                    });
+                    item.PackageReference = tempList.ToArray();
+                    File.WriteAllText(path, ToXml(project));
+                }
+            }
+        }
 
         /// <summary>
         /// 初始化标准库
@@ -22,19 +64,19 @@ namespace scaffold.Model
         /// <returns></returns>
         public void InitNetStandard2_0()
         {
-            if (PropertyGroup == null)
-            {
-                PropertyGroup = new ProjectPropertyGroup();
-            }
-            if (string.IsNullOrWhiteSpace(PropertyGroup.TargetFramework))
-            {
-                PropertyGroup.TargetFramework = "netstandard2.0";
-            }
-            if (string.IsNullOrWhiteSpace(Sdk))
-            {
-                Sdk = "Microsoft.NET.Sdk";
-            }
-            File.WriteAllText(SetPath, ToXml(this));
+            //if (PropertyGroup == null)
+            //{
+            //    PropertyGroup = new ProjectPropertyGroup();
+            //}
+            //if (string.IsNullOrWhiteSpace(PropertyGroup.TargetFramework))
+            //{
+            //    PropertyGroup.TargetFramework = "netstandard2.0";
+            //}
+            //if (string.IsNullOrWhiteSpace(Sdk))
+            //{
+            //    Sdk = "Microsoft.NET.Sdk";
+            //}
+            //File.WriteAllText(SetPath, ToXml(this));
         }
 
         /// <summary>
@@ -46,16 +88,16 @@ namespace scaffold.Model
             throw new NotImplementedException();
         }
 
-        private T XmlToObject<T>(string xml)
+        private static Project XmlToObject(string xml)
         {
             using (var rdr = new StringReader(xml))
             {
-                var serializer = new XmlSerializer(typeof(T));
-                return (T)serializer.Deserialize(rdr);
+                var serializer = new XmlSerializer(typeof(Project));
+                return (Project)serializer.Deserialize(rdr);
             }
         }
 
-        public string ToXml<T>(T o)
+        public static string ToXml<T>(T o)
         {
             var xsSubmit = new XmlSerializer(typeof(T));
             using (var sww = new StringWriter())
@@ -69,271 +111,240 @@ namespace scaffold.Model
         }
     }
 
+
     // 注意: 生成的代码可能至少需要 .NET Framework 4.5 或 .NET Core/Standard 2.0。
     /// <remarks/>
-    [System.Serializable()]
-    [System.ComponentModel.DesignerCategory("code")]
-    [XmlType(AnonymousType = true)]
-    [XmlRoot(Namespace = "", IsNullable = false)]
-    public partial class ProjectInitModel
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    [System.Xml.Serialization.XmlRootAttribute(Namespace = "", IsNullable = false)]
+    public partial class Project
     {
 
-        private ProjectPropertyGroup propertyGroupField;
+        private ProjectPropertyGroup[] propertyGroupField;
 
         private ProjectItemGroup[] itemGroupField;
 
         private string sdkField;
 
         /// <remarks/>
-        public ProjectPropertyGroup PropertyGroup
+        [System.Xml.Serialization.XmlElementAttribute("PropertyGroup")]
+        public ProjectPropertyGroup[] PropertyGroup
         {
             get
             {
-                return propertyGroupField;
+                return this.propertyGroupField;
             }
             set
             {
-                propertyGroupField = value;
+                this.propertyGroupField = value;
             }
         }
 
         /// <remarks/>
-        [XmlElement("ItemGroup")]
+        [System.Xml.Serialization.XmlElementAttribute("ItemGroup")]
         public ProjectItemGroup[] ItemGroup
         {
             get
             {
-                return itemGroupField;
+                return this.itemGroupField;
             }
             set
             {
-                itemGroupField = value;
+                this.itemGroupField = value;
             }
         }
 
         /// <remarks/>
-        [XmlAttribute()]
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Sdk
         {
             get
             {
-                return sdkField;
+                return this.sdkField;
             }
             set
             {
-                sdkField = value;
+                this.sdkField = value;
             }
         }
     }
 
     /// <remarks/>
-    [System.Serializable()]
-    [System.ComponentModel.DesignerCategory("code")]
-    [XmlType(AnonymousType = true)]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
     public partial class ProjectPropertyGroup
     {
 
+        private string documentationFileField;
+
         private string targetFrameworkField;
 
-        private string aspNetCoreHostingModelField;
+        private string conditionField;
+
+        /// <remarks/>
+        public string DocumentationFile
+        {
+            get
+            {
+                return this.documentationFileField;
+            }
+            set
+            {
+                this.documentationFileField = value;
+            }
+        }
 
         /// <remarks/>
         public string TargetFramework
         {
             get
             {
-                return targetFrameworkField;
+                return this.targetFrameworkField;
             }
             set
             {
-                targetFrameworkField = value;
+                this.targetFrameworkField = value;
             }
         }
 
         /// <remarks/>
-        public string AspNetCoreHostingModel
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string Condition
         {
             get
             {
-                return aspNetCoreHostingModelField;
+                return this.conditionField;
             }
             set
             {
-                aspNetCoreHostingModelField = value;
+                this.conditionField = value;
             }
         }
-
-        /// <remarks/>
-        public string IsPackable { get; set; }
     }
 
     /// <remarks/>
-    [System.Serializable()]
-    [System.ComponentModel.DesignerCategory("code")]
-    [XmlType(AnonymousType = true)]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
     public partial class ProjectItemGroup
     {
 
-        private ProjectItemGroupFolder folderField;
+        private ProjectItemGroupReference[] referenceField;
 
         private ProjectItemGroupProjectReference[] projectReferenceField;
 
         private ProjectItemGroupPackageReference[] packageReferenceField;
 
-        private ProjectItemGroupCompile compileField;
-
-        private ProjectItemGroupContent contentField;
-
-        private ProjectItemGroupEmbeddedResource embeddedResourceField;
-
-        private ProjectItemGroupNone noneField;
-
         /// <remarks/>
-        public ProjectItemGroupFolder Folder
+        public ProjectItemGroupReference[] Reference
         {
             get
             {
-                return folderField;
+                return this.referenceField;
             }
             set
             {
-                folderField = value;
+                this.referenceField = value;
             }
         }
 
         /// <remarks/>
-        [XmlElement("ProjectReference")]
         public ProjectItemGroupProjectReference[] ProjectReference
         {
             get
             {
-                return projectReferenceField;
+                return this.projectReferenceField;
             }
             set
             {
-                projectReferenceField = value;
+                this.projectReferenceField = value;
             }
         }
 
         /// <remarks/>
-        [XmlElement("PackageReference")]
+        [System.Xml.Serialization.XmlElementAttribute("PackageReference")]
         public ProjectItemGroupPackageReference[] PackageReference
         {
             get
             {
-                return packageReferenceField;
+                return this.packageReferenceField;
             }
             set
             {
-                packageReferenceField = value;
-            }
-        }
-
-        /// <remarks/>
-        public ProjectItemGroupCompile Compile
-        {
-            get
-            {
-                return compileField;
-            }
-            set
-            {
-                compileField = value;
-            }
-        }
-
-        /// <remarks/>
-        public ProjectItemGroupContent Content
-        {
-            get
-            {
-                return contentField;
-            }
-            set
-            {
-                contentField = value;
-            }
-        }
-
-        /// <remarks/>
-        public ProjectItemGroupEmbeddedResource EmbeddedResource
-        {
-            get
-            {
-                return embeddedResourceField;
-            }
-            set
-            {
-                embeddedResourceField = value;
-            }
-        }
-
-        /// <remarks/>
-        public ProjectItemGroupNone None
-        {
-            get
-            {
-                return noneField;
-            }
-            set
-            {
-                noneField = value;
+                this.packageReferenceField = value;
             }
         }
     }
 
     /// <remarks/>
-    [System.Serializable()]
-    [System.ComponentModel.DesignerCategory("code")]
-    [XmlType(AnonymousType = true)]
-    public partial class ProjectItemGroupFolder
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
+    public partial class ProjectItemGroupReference
     {
+
+        private string hintPathField;
 
         private string includeField;
 
         /// <remarks/>
-        [XmlAttribute()]
+        public string HintPath
+        {
+            get
+            {
+                return this.hintPathField;
+            }
+            set
+            {
+                this.hintPathField = value;
+            }
+        }
+
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Include
         {
             get
             {
-                return includeField;
+                return this.includeField;
             }
             set
             {
-                includeField = value;
+                this.includeField = value;
             }
         }
     }
 
     /// <remarks/>
-    [System.Serializable()]
-    [System.ComponentModel.DesignerCategory("code")]
-    [XmlType(AnonymousType = true)]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
     public partial class ProjectItemGroupProjectReference
     {
 
         private string includeField;
 
         /// <remarks/>
-        [XmlAttribute()]
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Include
         {
             get
             {
-                return includeField;
+                return this.includeField;
             }
             set
             {
-                includeField = value;
+                this.includeField = value;
             }
         }
     }
 
     /// <remarks/>
-    [System.Serializable()]
-    [System.ComponentModel.DesignerCategory("code")]
-    [XmlType(AnonymousType = true)]
+    [System.SerializableAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    [System.Xml.Serialization.XmlTypeAttribute(AnonymousType = true)]
     public partial class ProjectItemGroupPackageReference
     {
 
@@ -341,144 +352,34 @@ namespace scaffold.Model
 
         private string versionField;
 
-        private string privateAssetsField;
-
         /// <remarks/>
-        [XmlAttribute()]
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Include
         {
             get
             {
-                return includeField;
+                return this.includeField;
             }
             set
             {
-                includeField = value;
+                this.includeField = value;
             }
         }
 
         /// <remarks/>
-        [XmlAttribute()]
+        [System.Xml.Serialization.XmlAttributeAttribute()]
         public string Version
         {
             get
             {
-                return versionField;
+                return this.versionField;
             }
             set
             {
-                versionField = value;
-            }
-        }
-
-        /// <remarks/>
-        [XmlAttribute()]
-        public string PrivateAssets
-        {
-            get
-            {
-                return privateAssetsField;
-            }
-            set
-            {
-                privateAssetsField = value;
+                this.versionField = value;
             }
         }
     }
 
-    /// <remarks/>
-    [System.Serializable()]
-    [System.ComponentModel.DesignerCategory("code")]
-    [XmlType(AnonymousType = true)]
-    public partial class ProjectItemGroupCompile
-    {
 
-        private string removeField;
-
-        /// <remarks/>
-        [XmlAttribute()]
-        public string Remove
-        {
-            get
-            {
-                return removeField;
-            }
-            set
-            {
-                removeField = value;
-            }
-        }
-    }
-
-    /// <remarks/>
-    [System.Serializable()]
-    [System.ComponentModel.DesignerCategory("code")]
-    [XmlType(AnonymousType = true)]
-    public partial class ProjectItemGroupContent
-    {
-
-        private string removeField;
-
-        /// <remarks/>
-        [XmlAttribute()]
-        public string Remove
-        {
-            get
-            {
-                return removeField;
-            }
-            set
-            {
-                removeField = value;
-            }
-        }
-    }
-
-    /// <remarks/>
-    [System.Serializable()]
-    [System.ComponentModel.DesignerCategory("code")]
-    [XmlType(AnonymousType = true)]
-    public partial class ProjectItemGroupEmbeddedResource
-    {
-
-        private string removeField;
-
-        /// <remarks/>
-        [XmlAttribute()]
-        public string Remove
-        {
-            get
-            {
-                return removeField;
-            }
-            set
-            {
-                removeField = value;
-            }
-        }
-    }
-
-    /// <remarks/>
-    [System.Serializable()]
-    [System.ComponentModel.DesignerCategory("code")]
-    [XmlType(AnonymousType = true)]
-    public partial class ProjectItemGroupNone
-    {
-
-        private string removeField;
-
-        /// <remarks/>
-        [XmlAttribute()]
-        public string Remove
-        {
-            get
-            {
-                return removeField;
-            }
-            set
-            {
-                removeField = value;
-            }
-        }
-    }
 }

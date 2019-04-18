@@ -108,6 +108,10 @@ namespace scaffold.Model
 
         public void SaveDatabase()
         {
+            //var csprojPath = $"{Project.Path}/{Project["Database"]}/{Project["Database"]}.csproj";
+            //ProjectInitModel.AddNuget(csprojPath, "Pomelo.EntityFrameworkCore.MySql", "2.2.0");
+            //ProjectInitModel.AddNuget(csprojPath, "NPoco", "3.9.4");
+
             foreach (var checkedTable in CheckedTables)
             {
                 var (database, table, fields) = InitInfo(checkedTable);
