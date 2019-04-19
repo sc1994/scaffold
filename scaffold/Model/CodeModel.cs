@@ -841,13 +841,13 @@ $@"
                 {
                     code.AppendLine($@"
         /// <summary>修改</summary>
-        /// <param name=""id""></param>
-        [HttpPut(""{{id}}"")]
-        public async Task<bool> Edit{table.Name}({MapDataType(key.Type)} id)
+        /// <param name=""value""></param>
+        [HttpPut]
+        public async Task<bool> Edit{table.Name}([FromBody] {table.Name}Model value)
         {{
-            var model = await Get{table.Name}Model(id);
+            var model = await Get{table.Name}Model(value.{key.Name});
             if (model == null) return false;
-            return (await _service.UpdateAsync(model)).done;
+            return (await _service.UpdateAsync(value)).done;
         }}");
                     code.AppendLine($@"
         /// <summary>删除</summary>
