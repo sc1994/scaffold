@@ -110,7 +110,6 @@ namespace scaffold.Model
         {
             //var csprojPath = $"{Project.Path}/{Project["Database"]}/{Project["Database"]}.csproj";
             //ProjectInitModel.AddNuget(csprojPath, "Pomelo.EntityFrameworkCore.MySql", "2.2.0");
-            //ProjectInitModel.AddNuget(csprojPath, "NPoco", "3.9.4");
 
             foreach (var checkedTable in CheckedTables)
             {
@@ -202,7 +201,6 @@ namespace scaffold.Model
                 code.AppendLine();
                 code.AppendLine("using System;");
                 code.AppendLine("using System.Linq;");
-                code.AppendLine("using NPoco.Expressions;");
                 code.AppendLine("using System.Threading.Tasks;");
                 code.AppendLine("using System.Linq.Expressions;");
                 code.AppendLine("using System.Collections.Generic;");
@@ -261,7 +259,7 @@ namespace scaffold.Model
                     code.AppendLine("            {");
                     code.AppendLine("                if (search == null)");
                     code.AppendLine($"                    search = x => x.{field.Name} == predicate.{field.Name};");
-                    code.AppendLine($"                search = search.And(x => x.{field.Name} == predicate.{field.Name});");
+                    code.AppendLine($"                else search = search.And(x => x.{field.Name} == predicate.{field.Name});");
                     code.AppendLine("            }");
                 }
                 var key = fields.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.ColumnKey));
@@ -347,6 +345,7 @@ namespace scaffold.Model
                 {
                     var codeStr =
 @"using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Linq.Expressions;
 using System.Collections.Generic;
@@ -529,6 +528,72 @@ namespace {0}
         /// <returns></returns>
         public virtual Task<List<TModel>> FindAsync(TModel predicate, int index = 0, int size = 0)
             => throw new NotImplementedException();
+    }
+
+    /// <summary>Enables the efficient, dynamic composition of query predicates.</summary>
+    public static class PredicateBuilder
+    {
+        /// <summary>Creates a predicate that evaluates to true.</summary>
+        public static Expression<Func<T, bool>> True<T>()
+            =>  param => true;
+
+        /// <summary>Creates a predicate that evaluates to false.</summary>
+        public static Expression<Func<T, bool>> False<T>()
+            =>  param => false;
+
+        /// <summary>Creates a predicate expression from the specified lambda expression.</summary>
+        public static Expression<Func<T, bool>> Create<T>(Expression<Func<T, bool>> predicate)
+            =>  predicate;
+
+        /// <summary>Combines the first predicate with the second using the logical ""and"".</summary>
+        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> first, Expression<Func<T, bool>> second)
+            => first.Compose(second, Expression.AndAlso);
+
+        /// <summary>Combines the first predicate with the second using the logical ""or"".</summary>
+        public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> first, Expression<Func<T, bool>> second)
+            =>  first.Compose(second, Expression.OrElse);
+
+        /// <summary>Negates the predicate.</summary>
+        public static Expression<Func<T, bool>> Not<T>(this Expression<Func<T, bool>> expression)
+        {
+            var negated = Expression.Not(expression.Body);
+            return Expression.Lambda<Func<T, bool>>(negated, expression.Parameters);
+        }
+
+        /// <summary>Combines the first expression with the second using the specified merge function.</summary>
+        private static Expression<T> Compose<T>(this Expression<T> first, Expression<T> second, Func<Expression, Expression, Expression> merge)
+        {
+            var map = first.Parameters
+                .Select((f, i) => new { f, s = second.Parameters[i] })
+                .ToDictionary(p => p.s, p => p.f);
+
+            var secondBody = ParameterRebinder.ReplaceParameters(map, second.Body);
+            return Expression.Lambda<T>(merge(first.Body, secondBody), first.Parameters);
+        }
+    }
+
+    /// <summary></summary>
+    public class ParameterRebinder : ExpressionVisitor
+    {
+        private readonly Dictionary<ParameterExpression, ParameterExpression> _map;
+
+        /// <summary></summary>
+        public ParameterRebinder(Dictionary<ParameterExpression, ParameterExpression> map)
+        {
+            _map = map ?? new Dictionary<ParameterExpression, ParameterExpression>();
+        }
+
+        /// <summary></summary>
+        public static Expression ReplaceParameters(Dictionary<ParameterExpression, ParameterExpression> map, Expression exp)
+            => new ParameterRebinder(map).Visit(exp);
+
+        /// <summary></summary>
+        protected override Expression VisitParameter(ParameterExpression p)
+        {
+            if (_map.TryGetValue(p, out var replacement))
+                p = replacement;
+            return base.VisitParameter(p);
+        }
     }
 }";
                     codeStr = codeStr.Replace("{0}", Project["Database"]);
