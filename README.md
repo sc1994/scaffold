@@ -22,14 +22,8 @@ dotnet run
 
 - 默认本地机器已经安装了dotnet core 2.2 开发环境
 - 访问`localhost:5000`
-- 被生成代码的项目须有满足一下条件
-  - `Model`层以`xxx.Models`项目命名方式，`xxx`指待你的项目名称
-  - `Database`层以`xxx.Database`项目命名方式，同上
-  - `Service`层以`xxx.Services`项目命名方式，同上
 
 ## todo
  
 - [ ] 初始化项目结构（用处不大）
-- [ ] 支持指定文件夹生成，而不是使用默认
-- [ ] 注释完善，
 - [ ] 区别于swagger的自动化文档
