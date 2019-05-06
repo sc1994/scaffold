@@ -33,22 +33,26 @@ namespace scaffold.Controllers
                 CheckedTables = info.tables.ToList(),
             };
 
-            if (info.types.Contains("Models"))
+            if (info.types.Contains("Entities"))
             {
                 code.SaveModel();
             }
-            if (info.types.Contains("Database"))
+            if (info.types.Contains("Repositories"))
             {
                 code.SaveDatabase();
             }
-            if (info.types.Contains("Services"))
+            if(info.types.Contains("BaseRepositories"))
             {
-                code.SaveService();
+                code.SaveBaseRepositories();
             }
-            if (info.types.Contains("Api"))
-            {
-                code.SaveApi();
-            }
+            // if (info.types.Contains("Services"))
+            // {
+            //     code.SaveService();
+            // }
+            // if (info.types.Contains("Api"))
+            // {
+            //     code.SaveApi();
+            // }
 
             return (true, "");
         }

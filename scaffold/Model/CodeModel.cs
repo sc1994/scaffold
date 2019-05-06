@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace scaffold.Model
 {
@@ -26,26 +26,26 @@ namespace scaffold.Model
         /// </summary>
         [JsonIgnore]
         public ProjectModel Project
-                => new ProjectModel().GetProjects()?.FirstOrDefault(x => x.Name == ProjectName);
+            => new ProjectModel().GetProjects()?.FirstOrDefault(x => x.Name == ProjectName);
 
-        private (DatabaseModel database, TableModel table, List<FieldModel> fields) InitInfo(string checkedTable)
+        private(DatabaseModel database, TableModel table, List<FieldModel> fields)InitInfo(string checkedTable)
         {
             var databaseName = checkedTable.Split('.')[0];
             var tableName = checkedTable.Split('.')[1];
 
             var database = Databases?.FirstOrDefault(x => x.Name == databaseName);
-            if (database == null) throw new NullReferenceException(nameof(database));
+            if (database == null)throw new NullReferenceException(nameof(database));
             var table = new TableModel
             {
                 Database = database
             }.GetTables()?.FirstOrDefault(x => x.Name == tableName);
-            if (table == null) throw new NullReferenceException(nameof(table));
+            if (table == null)throw new NullReferenceException(nameof(table));
             table.Comment = table.Comment.Replace("\r\n", "");
             var fields = new FieldModel
             {
                 Table = table
             }.GetFields()?.ToList();
-            if (fields == null) throw new NullReferenceException(nameof(fields));
+            if (fields == null)throw new NullReferenceException(nameof(fields));
             return (database, table, fields);
         }
 
@@ -53,16 +53,21 @@ namespace scaffold.Model
         {
             switch (sqlDataType.ToLower())
             {
-                case "bigint": return "long";
-                case "datetime": return "DateTime";
+                case "bigint":
+                    return "long";
+                case "datetime":
+                    return "DateTime";
 
                 case "text":
-                case "varchar": return "string";
+                case "varchar":
+                    return "string";
 
                 case "int":
                 case "decimal":
-                case "double": return sqlDataType.ToLower();
-                default: return "object";
+                case "double":
+                    return sqlDataType.ToLower();
+                default:
+                    return "object";
             }
         }
 
@@ -70,9 +75,9 @@ namespace scaffold.Model
         {
             foreach (var checkedTable in CheckedTables)
             {
-                var (database, table, fields) = InitInfo(checkedTable);
-                if (!fields.Any()) continue;
-                if (fields.All(x => x.ColumnKey.Trim().Length < 1)) continue;
+                var(database, table, fields) = InitInfo(checkedTable);
+                if (!fields.Any())continue;
+                if (fields.All(x => x.ColumnKey.Trim().Length < 1))continue;
 
                 var code = new StringBuilder();
                 code.AppendLine("// =============系统自动生成=============");
@@ -84,11 +89,11 @@ namespace scaffold.Model
                 code.AppendLine("using System;");
                 code.AppendLine("using System.ComponentModel.DataAnnotations.Schema;");
                 code.AppendLine();
-                code.AppendLine($"namespace {Project["Models"]}.{database.Database}");
+                code.AppendLine($"namespace {Project["Entities"]}.{database.Database}");
                 code.AppendLine("{");
                 code.AppendLine($"    /// <summary>{table.Comment}</summary>");
                 code.AppendLine($"    [Table(\"{table.Name}\")]");
-                code.AppendLine($"    public class {table.Name}Model");
+                code.AppendLine($"    public class {table.Name}Entity");
                 code.AppendLine("    {");
                 foreach (var field in fields)
                 {
@@ -99,25 +104,25 @@ namespace scaffold.Model
                 }
                 code.AppendLine("    }");
                 code.AppendLine("}");
-                var path = $"{Project.Path}/{Project["Models"]}/{database.Database}Model";
+                var path = $"{Project.Path}/{Project["Entities"]}/{database.Database}";
                 Directory.CreateDirectory(path);
-                path += $"/{table.Name}.cs";
+                path += $"/{table.Name}Entity.cs";
                 File.WriteAllText(path, code.ToString());
             }
         }
 
         public void SaveDatabase()
         {
-            //var csprojPath = $"{Project.Path}/{Project["Database"]}/{Project["Database"]}.csproj";
+            //var csprojPath = $"{Project.Path}/{Project["Repositories"]}/{Project["Repositories"]}.csproj";
             //ProjectInitModel.AddNuget(csprojPath, "Pomelo.EntityFrameworkCore.MySql", "2.2.0");
 
             foreach (var checkedTable in CheckedTables)
             {
-                var (database, table, fields) = InitInfo(checkedTable);
-                if (!fields.Any()) continue;
-                if (fields.All(x => x.ColumnKey.Trim().Length < 1)) continue;
+                var(database, table, fields) = InitInfo(checkedTable);
+                if (!fields.Any())continue;
+                if (fields.All(x => x.ColumnKey.Trim().Length < 1))continue;
 
-                var path = $"{Project.Path}/{Project["Database"]}/{database.Database}";
+                var path = $"{Project.Path}/{Project["Repositories"]}/{database.Database}";
                 Directory.CreateDirectory(path);
                 var contextPath = $"{path}/1_{database.Database}Context.cs";
                 StringBuilder code;
@@ -131,8 +136,8 @@ namespace scaffold.Model
                     var oldContext = new List<string>();
                     foreach (var line in lines)
                     {
-                        if (line.Trim().Replace("  ", " ").Replace("  ", " ")
-                            == "protected override void OnModelCreating(ModelBuilder modelBuilder)")
+                        if (line.Trim().Replace("  ", " ").Replace("  ", " ") ==
+                            "protected override void OnModelCreating(ModelBuilder modelBuilder)")
                         {
                             lineFlag = true;
                         }
@@ -168,7 +173,7 @@ namespace scaffold.Model
                     code.AppendLine();
                     code.AppendLine("using Microsoft.EntityFrameworkCore;");
                     code.AppendLine();
-                    code.AppendLine($"namespace {Project["Database"]}.{database.Database}");
+                    code.AppendLine($"namespace {Project["Repositories"]}.{database.Database}");
                     code.AppendLine("{");
                     code.AppendLine("    /// <inheritdoc />");
                     code.AppendLine($"    /// <summary>{database.Name}</summary>");
@@ -205,20 +210,20 @@ namespace scaffold.Model
                 code.AppendLine("using System.Linq.Expressions;");
                 code.AppendLine("using System.Collections.Generic;");
                 code.AppendLine("using Microsoft.EntityFrameworkCore;");
-                code.AppendLine($"using {Project["Models"]}.{database.Database};");
+                code.AppendLine($"using {Project["Entities"]}.{database.Database};");
                 code.AppendLine();
-                code.AppendLine($"namespace {Project["Database"]}.{database.Database}");
+                code.AppendLine($"namespace {Project["Repositories"]}.{database.Database}");
                 code.AppendLine("{");
                 code.AppendLine($"    /// <summary>{table.Comment}</summary>");
-                code.AppendLine($"    public partial class {table.Name}Storage : BaseStorage<{database.Database}Context, {table.Name}Model>");
+                code.AppendLine($"    public partial class {table.Name}Storage : BaseStorage<{database.Database}Context, {table.Name}Entity>");
                 code.AppendLine("    {");
                 code.AppendLine("        /// <summary>单个查询</summary>");
                 code.AppendLine("        /// <param name=\"predicate\">搜索条件</param>");
                 code.AppendLine("        /// <returns></returns>");
-                code.AppendLine($"        public override async Task<{table.Name}Model> FirstOrDefaultAsync(Expression<Func<{table.Name}Model, bool>> predicate)");
+                code.AppendLine($"        public override async Task<{table.Name}Entity> FirstOrDefaultAsync(Expression<Func<{table.Name}Entity, bool>> predicate)");
                 code.AppendLine("        {");
                 code.AppendLine($"            using (var context = new {database.Database}Context())");
-                code.AppendLine($"                return await context.{table.Name}Model.FirstOrDefaultAsync(predicate);");
+                code.AppendLine($"                return await context.{table.Name}Entity.FirstOrDefaultAsync(predicate);");
                 code.AppendLine("        }");
                 code.AppendLine();
                 code.AppendLine("        /// <summary>简单查询</summary>");
@@ -226,11 +231,11 @@ namespace scaffold.Model
                 code.AppendLine("        /// <param name=\"index\"></param>");
                 code.AppendLine("        /// <param name=\"size\"></param>");
                 code.AppendLine("        /// <returns></returns>");
-                code.AppendLine($"        public override async Task<List<{table.Name}Model>> FindAsync(Expression<Func<{table.Name}Model, bool>> predicate, int index = 0, int size = 0)");
+                code.AppendLine($"        public override async Task<List<{table.Name}Entity>> FindAsync(Expression<Func<{table.Name}Entity, bool>> predicate, int index = 0, int size = 0)");
                 code.AppendLine("        {");
                 code.AppendLine($"            using (var context = new {database.Database}Context())");
                 code.AppendLine("            {");
-                code.AppendLine($"                var query = context.{table.Name}Model.Where(predicate);");
+                code.AppendLine($"                var query = context.{table.Name}Entity.Where(predicate);");
                 code.AppendLine("                if (index > 0 && size > 0)");
                 code.AppendLine("                    query = query.Skip((index - 1) * size).Take(size);");
                 code.AppendLine("                return await query.ToListAsync();");
@@ -242,10 +247,10 @@ namespace scaffold.Model
                 code.AppendLine("        /// <param name=\"index\"></param>");
                 code.AppendLine("        /// <param name=\"size\"></param>");
                 code.AppendLine("        /// <returns></returns>");
-                code.AppendLine($"        public override async Task<List<{table.Name}Model>> FindAsync({table.Name}Model predicate, int index = 0, int size = 0)");
+                code.AppendLine($"        public override async Task<List<{table.Name}Entity>> FindAsync({table.Name}Entity predicate, int index = 0, int size = 0)");
                 code.AppendLine("        {");
-                code.AppendLine($"            Expression<Func<{table.Name}Model, bool>> search = null;");
-                code.AppendLine($"            var defaultModel = new {table.Name}Model();");
+                code.AppendLine($"            Expression<Func<{table.Name}Entity, bool>> search = null;");
+                code.AppendLine($"            var defaultModel = new {table.Name}Entity();");
                 code.AppendLine();
                 foreach (var field in fields)
                 {
@@ -277,12 +282,12 @@ namespace scaffold.Model
                 code.AppendLine($"    public partial class {database.Database}Context");
                 code.AppendLine("    {");
                 code.AppendLine($"        /// <summary>{table.Comment}</summary>");
-                code.AppendLine($"        public virtual DbSet<{table.Name}Model> {table.Name}Model {{ get; set; }}");
+                code.AppendLine($"        public virtual DbSet<{table.Name}Entity> {table.Name}Entity {{ get; set; }}");
                 code.AppendLine();
                 code.AppendLine($"        /// <summary>{table.Comment}</summary>");
                 code.AppendLine($"        protected void OnModelCreating{table.Name}(ModelBuilder modelBuilder)");
                 code.AppendLine("        {");
-                code.AppendLine($"            modelBuilder.Entity<{table.Name}Model>(entity =>");
+                code.AppendLine($"            modelBuilder.Entity<{table.Name}Entity>(entity =>");
                 code.AppendLine("            {");
                 var isKey = true;
                 foreach (var field in fields)
@@ -321,12 +326,12 @@ namespace scaffold.Model
                 if (!File.Exists($"{path}/{table.Name}Storage.cs"))
                 {
                     code = new StringBuilder();
-                    code.AppendLine($"using {Project["Models"]}.{database.Database};");
+                    code.AppendLine($"using {Project["Entities"]}.{database.Database};");
                     code.AppendLine();
-                    code.AppendLine($"namespace {Project["Database"]}.{database.Database}");
+                    code.AppendLine($"namespace {Project["Repositories"]}.{database.Database}");
                     code.AppendLine("{");
                     code.AppendLine($"    /// <summary>{table.Comment}接口</summary>");
-                    code.AppendLine($"    public interface I{table.Name}Storage : IBaseStorage<{table.Name}Model>");
+                    code.AppendLine($"    public interface I{table.Name}Storage : IBaseStorage<{table.Name}Entity>");
                     code.AppendLine("    {");
                     code.AppendLine("    }");
                     code.AppendLine();
@@ -337,14 +342,18 @@ namespace scaffold.Model
                     code.AppendLine("}");
                     File.WriteAllText($"{path}/{table.Name}Storage.cs", code.ToString());
                 }
-                #endregion
+                #endregion                
+            }
+        }
 
-                #region 生成BaseContext
-                var pathBase = $"{Project.Path}/{Project["Database"]}/BaseContext.cs";
-                if (!File.Exists(pathBase))
-                {
-                    var codeStr =
-@"using System;
+
+        public void SaveBaseRepositories()
+        {
+            var pathBase = $"{Project.Path}/{Project["Repositories"]}/BaseContext.cs";
+            if (!File.Exists(pathBase))
+            {
+                var codeStr =
+                    @"using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Linq.Expressions;
@@ -596,10 +605,8 @@ namespace {0}
         }
     }
 }";
-                    codeStr = codeStr.Replace("{0}", Project["Database"]);
-                    File.WriteAllText(pathBase, codeStr);
-                }
-                #endregion
+                codeStr = codeStr.Replace("{0}", Project["Repositories"]);
+                File.WriteAllText(pathBase, codeStr);
             }
         }
 
@@ -607,9 +614,9 @@ namespace {0}
         {
             foreach (var checkedTable in CheckedTables)
             {
-                var (database, table, fields) = InitInfo(checkedTable);
-                if (!fields.Any()) continue;
-                if (fields.All(x => x.ColumnKey.Trim().Length < 1)) continue;
+                var(database, table, fields) = InitInfo(checkedTable);
+                if (!fields.Any())continue;
+                if (fields.All(x => x.ColumnKey.Trim().Length < 1))continue;
 
                 #region BaseService
                 Directory.CreateDirectory($"{Project.Path}/{Project["Services"]}");
@@ -617,7 +624,7 @@ namespace {0}
                 if (!File.Exists(pathBase))
                 {
                     var codeStr =
-@"using System;
+                        @"using System;
 using System.Threading.Tasks;
 using System.Linq.Expressions;
 using System.Collections.Generic;
@@ -750,7 +757,7 @@ namespace {1}
             => await _storage.FindAsync(predicate, index, size);
     }
 }";
-                    File.WriteAllText(pathBase, codeStr.Replace("{0}", Project["Database"]).Replace("{1}", Project["Services"]));
+                    File.WriteAllText(pathBase, codeStr.Replace("{0}", Project["Repositories"]).Replace("{1}", Project["Services"]));
                 }
                 #endregion
 
@@ -759,8 +766,8 @@ namespace {1}
                 if (!File.Exists(path))
                 {
                     var codeStr =
-$@"using {Project["Models"]}.{database.Database};
-using {Project["Database"]}.{database.Database};
+                        $@"using {Project["Entities"]}.{database.Database};
+using {Project["Repositories"]}.{database.Database};
 
 namespace {Project["Services"]}.{database.Database}
 {{
@@ -787,7 +794,7 @@ namespace {Project["Services"]}.{database.Database}
         {
             #region 注入
             var codeStr =
-$@"        
+                $@"        
         /// <summary>
         /// 注入
         /// </summary>
@@ -800,7 +807,7 @@ $@"
             // 参考文章 http://www.cnblogs.com/dotNETCoreSG/p/aspnetcore-3_10-dependency-injection.html
 
             var allTypes = Assembly.Load(""{Project["Services"]}"").GetTypes().ToList(); 
-            allTypes.AddRange(Assembly.Load(""{Project["Database"]}"").GetTypes()); // 获取命名空间下的全部实例
+            allTypes.AddRange(Assembly.Load(""{Project["Repositories"]}"").GetTypes()); // 获取命名空间下的全部实例
 
             foreach (var type in allTypes)
             {{
@@ -819,9 +826,7 @@ $@"
             if (File.Exists(startupPath))
             {
                 var codeLines = File.ReadAllLines(startupPath).ToList();
-                for (var configureServicesIndex = codeLines.FindIndex(x => x.Trim() == "public void ConfigureServices(IServiceCollection services)");
-                    configureServicesIndex < codeLines.Count;
-                    configureServicesIndex++)
+                for (var configureServicesIndex = codeLines.FindIndex(x => x.Trim() == "public void ConfigureServices(IServiceCollection services)"); configureServicesIndex < codeLines.Count; configureServicesIndex++)
                 {
                     var line = codeLines[configureServicesIndex];
 
@@ -851,9 +856,9 @@ $@"
             #region 接口
             foreach (var checkedTable in CheckedTables)
             {
-                var (database, table, fields) = InitInfo(checkedTable);
-                if (!fields.Any()) continue;
-                if (fields.All(x => x.ColumnKey.Trim().Length < 1)) continue;
+                var(database, table, fields) = InitInfo(checkedTable);
+                if (!fields.Any())continue;
+                if (fields.All(x => x.ColumnKey.Trim().Length < 1))continue;
 
                 var code = new StringBuilder();
                 code.AppendLine("// =============系统自动生成=============");
@@ -864,7 +869,7 @@ $@"
                 code.AppendLine("using System.Threading.Tasks;");
                 code.AppendLine("using Microsoft.AspNetCore.Mvc;");
                 code.AppendLine("using System.Collections.Generic;");
-                code.AppendLine($"using {Project["Models"]}.{database.Database};");
+                code.AppendLine($"using {Project["Entities"]}.{database.Database};");
                 code.AppendLine();
                 code.AppendLine($"namespace {Project["Api"]}.Controllers.{database.Database}");
                 code.AppendLine("{");
@@ -874,7 +879,7 @@ $@"
                 code.AppendLine("    {");
 
                 code.AppendLine(
-@"        /// <summary>查询</summary>
+                    @"        /// <summary>查询</summary>
         /// <param name=""predicate""></param>
         /// <param name=""index""></param>
         /// <param name=""size""></param>
@@ -936,7 +941,7 @@ $@"
                 {
                     code = new StringBuilder();
                     code.AppendLine(
-$@"using {Project["Services"]}.{database.Database};
+                        $@"using {Project["Services"]}.{database.Database};
 
 namespace {Project["Api"]}.Controllers.{database.Database}
 {{
@@ -967,4 +972,3 @@ namespace {Project["Api"]}.Controllers.{database.Database}
         }
     }
 }
-

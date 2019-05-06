@@ -116,10 +116,9 @@
             </el-form-item>
             <el-form-item label="内容：">
                 <el-checkbox-group v-model="form2.type">
-                    <el-checkbox label="Models" name="type">Models</el-checkbox>
-                    <el-checkbox label="Database" name="type">Database</el-checkbox>
-                    <el-checkbox label="Services" name="type">Services</el-checkbox>
-                    <el-checkbox label="Api" name="type">Api</el-checkbox>
+                    <el-checkbox label="Entities" name="type">Entities</el-checkbox>
+                    <el-checkbox label="Repositories" name="type">Repositories</el-checkbox>
+                    <el-checkbox label="BaseRepositories" name="type">BaseRepositories</el-checkbox>
                 </el-checkbox-group>
             </el-form-item>
         </el-form>
@@ -139,11 +138,8 @@
                 name: "",
                 path: "",
                 itemDictionary: [
-                    { key: "Models", value: "" },
-                    { key: "Database", value: "" },
-                    { key: "Services", value: "" },
-                    { key: "Web", value: "" },
-                    { key: "Api", value: "" }
+                    { key: "Entities", value: "" },
+                    { key: "Repositories", value: "" }
                 ]
             },
             form2: {
